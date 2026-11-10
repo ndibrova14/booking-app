@@ -49,6 +49,7 @@ function App() {
     const f = new FormData(e.target)
     const u = window.Telegram?.WebApp?.initDataUnsafe?.user
     const tgUser = u ? `${u.first_name || ''} ${u.username ? '@' + u.username : ''}`.trim() : ''
+    const tgUserId = u?.id || 0
 
     try {
       const r = await fetch('/api/booking', {
@@ -62,6 +63,7 @@ function App() {
           name: f.get('name'),
           phone: f.get('phone'),
           tgUser,
+                    tgUserId,
         }),
       })
       if (!r.ok) throw new Error('fail')
