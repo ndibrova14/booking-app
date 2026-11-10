@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 
 const CATEGORIES = ['Усі', 'Ресторани', 'Кафе', 'Кальян-бари']
@@ -18,6 +18,16 @@ function App() {
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(null)
   const [sent, setSent] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const tg = window.Telegram?.WebApp
+    if (tg) {
+      tg.ready()
+      tg.expand()
+    }
+  }, [])
 
   const visible = PLACES.filter(
     (p) =>
@@ -28,11 +38,38 @@ function App() {
   function closeModal() {
     setSelected(null)
     setSent(false)
+    setError('')
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    setSent(true)
+    setSending(true)
+    setError('')
+
+    const f = new FormData(e.target)
+    const u = window.Telegram?.WebApp?.initDataUnsafe?.user
+    const tgUser = u ? `${u.first_name || ''} ${u.username ? '@' + u.username : ''}`.trim() : ''
+
+    try {
+      const r = await fetch('/api/booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          place: selected.name,
+          date: f.get('date'),
+          time: f.get('time'),
+          guests: f.get('guests'),
+          name: f.get('name'),
+          phone: f.get('phone'),
+          tgUser,
+        }),
+      })
+      if (!r.ok) throw new Error('fail')
+      setSent(true)
+    } catch {
+      setError('Не вдалося надіслати заявку. Спробуйте ще раз.')
+    }
+    setSending(false)
   }
 
   return (
@@ -82,12 +119,15 @@ function App() {
               </>
             ) : (
               <form onSubmit={handleSubmit}>
-                <input type="date" required />
-                <input type="time" required />
-                <input type="number" min="1" max="20" placeholder="Кількість людей" required />
-                <input placeholder="Ім'я" required />
-                <input type="tel" placeholder="Телефон" required />
-                <button className="book" type="submit">Надіслати заявку</button>
+                <input name="date" type="date" required />
+                <input name="time" type="time" required />
+                <input name="guests" type="number" min="1" max="20" placeholder="Кількість людей" required />
+                <input name="name" placeholder="Ім'я" required />
+                <input name="phone" type="tel" placeholder="Телефон" required />
+                {error && <p>{error}</p>}
+                <button className="book" type="submit" disabled={sending}>
+                  {sending ? 'Надсилаємо…' : 'Надіслати заявку'}
+                </button>
               </form>
             )}
           </div>
