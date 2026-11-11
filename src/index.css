@@ -1,6 +1,21 @@
+:root {
+  --bg: var(--tg-theme-secondary-bg-color, #f4f4f6);
+  --card: var(--tg-theme-bg-color, #ffffff);
+  --text: var(--tg-theme-text-color, #1a1a1a);
+  --hint: var(--tg-theme-hint-color, #7a7a85);
+  --accent: var(--tg-theme-button-color, #2a7fff);
+  --accent-text: var(--tg-theme-button-text-color, #ffffff);
+  --line: rgba(128, 128, 128, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
-  background: #f4f4f6;
-  color: #1a1a1a;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
 }
