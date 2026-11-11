@@ -83,3 +83,9 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .pin.me { background: #2e9d5b; }
 .card .dist { color: var(--accent); font-weight: 600; font-size: 13px; }
 .chip:disabled { opacity: 0.6; }
+.actions { display: flex; gap: 8px; margin-top: 12px; }
+.actions .book { margin-top: 0; flex: 1; }
+.menu-btn {
+  flex: none; padding: 12px 18px; border-radius: 12px; font-size: 16px; font-weight: 600;
+  cursor: pointer; background: transparent; color: var(--accent); border: 1px solid var(--accent);
+}

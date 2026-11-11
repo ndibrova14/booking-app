@@ -121,8 +121,15 @@ function MapView({ places, me, onPick }) {
   return <div ref={boxRef} className="map" />
 }
 
+function openMenu(url) {
+  const tg = window.Telegram?.WebApp
+  if (tg?.openLink) tg.openLink(url)
+  else window.open(url, '_blank', 'noopener')
+}
+
 function PlaceCard({ place, onBook }) {
   const open = isOpenNow(place.hours)
+  const hasMenu = /^https?:\/\//i.test(place.menu_url || '')
   return (
     <div className="card">
       {place.photo_url && (
@@ -151,13 +158,21 @@ function PlaceCard({ place, onBook }) {
           <p className="dist">{formatDistance(place.distance)} від вас</p>
         )}
         <p className="hours">{place.hours}</p>
-        <button className="book" onClick={() => onBook(place)}>
-          Забронювати
-        </button>
+        <div className="actions">
+          {hasMenu && (
+            <button className="menu-btn" onClick={() => openMenu(place.menu_url)}>
+              Меню
+            </button>
+          )}
+          <button className="book" onClick={() => onBook(place)}>
+            Забронювати
+          </button>
+        </div>
       </div>
     </div>
   )
 }
+
 
 function App() {
   const [places, setPlaces] = useState([])
