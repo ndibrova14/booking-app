@@ -69,3 +69,12 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
   border: 3px solid #fff; border-radius: 50%; box-shadow: 0 1px 5px rgba(0,0,0,0.45);
 }
 .hint { color: var(--hint); text-align: center; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field span { font-size: 13px; color: var(--hint); }
+.modal input {
+  width: 100%;
+  min-height: 46px;
+  text-align: left;
+  -webkit-appearance: none;
+  appearance: none;
+}

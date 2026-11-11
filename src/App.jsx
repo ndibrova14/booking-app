@@ -47,6 +47,8 @@ function App() {
   const [sent, setSent] = useState(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
+    const d = new Date()
+  const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
   useEffect(() => {
         const tg = window.Telegram?.WebApp
@@ -207,12 +209,35 @@ function App() {
                 <button className="book" onClick={closeModal}>Закрити</button>
               </>
             ) : (
-              <form onSubmit={handleSubmit}>
-                <input name="date" type="date" required />
-                <input name="time" type="time" required />
-                <input name="guests" type="number" min="1" max="20" placeholder="Кількість людей" required />
-                <input name="name" placeholder="Ім'я" required />
-                <input name="phone" type="tel" placeholder="Телефон" required />
+                            <form onSubmit={handleSubmit}>
+                <label className="field">
+                  <span>Дата</span>
+                  <input name="date" type="date" min={today} required />
+                </label>
+                <label className="field">
+                  <span>Час</span>
+                  <input name="time" type="time" required />
+                </label>
+                <label className="field">
+                  <span>Кількість людей</span>
+                  <input
+                    name="guests"
+                    type="number"
+                    min="1"
+                    max="20"
+                    inputMode="numeric"
+                    placeholder="Наприклад, 2"
+                    required
+                  />
+                </label>
+                <label className="field">
+                  <span>Ім'я</span>
+                  <input name="name" placeholder="Як до вас звертатися" required />
+                </label>
+                <label className="field">
+                  <span>Телефон</span>
+                  <input name="phone" type="tel" placeholder="+380" required />
+                </label>
                 {error && <p>{error}</p>}
                 <button className="book" type="submit" disabled={sending}>
                   {sending ? 'Надсилаємо…' : 'Надіслати заявку'}
