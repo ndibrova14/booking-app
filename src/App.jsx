@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import './App.css'
+import Cabinet from './Cabinet.jsx'
 
 const CATEGORIES = ['Усі', 'Ресторани', 'Кафе', 'Кальян-бари']
 
@@ -190,6 +191,8 @@ function App() {
   const [sent, setSent] = useState(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
+    const [isAdmin, setIsAdmin] = useState(false)
+  const [screen, setScreen] = useState('catalog')
 
   const d = new Date()
   const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -208,6 +211,18 @@ function App() {
       } catch {
         // старі версії Telegram цього не підтримують
       }
+    }
+    if (tg?.initData) {
+      fetch('/api/cabinet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'me', initData: tg.initData }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (d?.places?.length) setIsAdmin(true)
+        })
+        .catch(() => {})
     }
 
     fetch('/api/places')
@@ -303,10 +318,18 @@ function App() {
     }
     setSending(false)
   }
-
+  if (screen === 'cabinet') return <Cabinet onBack={() => setScreen('catalog')} />
+  
   return (
     <div className="app">
-      <h1>Заклади міста</h1>
+         <div className="topbar">
+        <h1>Заклади міста</h1>
+        {isAdmin && (
+          <button className="cab-btn" onClick={() => setScreen('cabinet')}>
+            Кабінет
+          </button>
+        )}
+      </div>
 
       <input
         className="search"

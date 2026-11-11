@@ -89,3 +89,15 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
   flex: none; padding: 12px 18px; border-radius: 12px; font-size: 16px; font-weight: 600;
   cursor: pointer; background: transparent; color: var(--accent); border: 1px solid var(--accent);
 }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.cab-btn {
+  flex: none; padding: 8px 14px; border-radius: 999px; font-size: 14px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--card); color: var(--text);
+}
+.back { background: none; border: none; color: var(--accent); font-size: 15px; padding: 0 0 8px; cursor: pointer; }
+.hint.left { text-align: left; margin: -6px 0 12px; }
+.badge.st-new { background: rgba(196, 85, 58, 0.16); color: var(--accent); }
+.badge.st-confirmed { background: rgba(46, 160, 90, 0.16); color: #2a9d5c; }
+.badge.st-rejected, .badge.st-cancelled { background: rgba(128, 128, 128, 0.18); color: var(--hint); }
+.card a { color: var(--accent); text-decoration: none; }
+.menu-btn:disabled, .book:disabled { opacity: 0.6; }
