@@ -1,17 +1,8 @@
-const API = `https://api.telegram.org/bot${process.env.BOT_TOKEN}`
-
-async function tg(method, body) {
-  return fetch(`${API}/${method}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
-}
+import { db, tg } from './_lib.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
 
-  // Приймаємо запити лише від Telegram
   if (req.headers['x-telegram-bot-api-secret-token'] !== process.env.WEBHOOK_SECRET) {
     return res.status(401).end()
   }
@@ -19,40 +10,67 @@ export default async function handler(req, res) {
   const cb = req.body?.callback_query
   if (!cb) return res.status(200).end()
 
-  // Поки що кнопки може натискати лише адміністратор
-  if (String(cb.from.id) !== String(process.env.ADMIN_CHAT_ID)) {
-    await tg('answerCallbackQuery', { callback_query_id: cb.id })
-    return res.status(200).end()
-  }
+  const answer = (text) =>
+    tg('answerCallbackQuery', { callback_query_id: cb.id, ...(text ? { text } : {}) })
 
-  const [action, clientId] = (cb.data || '').split(':')
-  const confirmed = action === 'ok'
-  const original = cb.message?.text || ''
-  const details = original.split('\n\n').slice(1).join('\n\n')
+  try {
+    const [action, idStr] = (cb.data || '').split(':')
+    const id = Number(idStr)
+    if (!['ok', 'no'].includes(action) || !Number.isInteger(id)) {
+      await answer()
+      return res.status(200).end()
+    }
 
-  // Оновлюємо повідомлення закладу (кнопки зникають)
-  await tg('editMessageText', {
-    chat_id: cb.message.chat.id,
-    message_id: cb.message.message_id,
-    text: `${original}\n\n${confirmed ? '✅ Підтверджено' : '❌ Відхилено'}`,
-  })
+    const rows = await db(`bookings?id=eq.${id}&select=*,places(admin_chat_id)`)
+    const b = rows?.[0]
+    if (!b) {
+      await answer('Бронь не знайдено')
+      return res.status(200).end()
+    }
 
-  await tg('answerCallbackQuery', {
-    callback_query_id: cb.id,
-    text: confirmed ? 'Підтверджено' : 'Відхилено',
-  })
+    // Кнопки може натискати адміністратор цього закладу або головний адміністратор
+    const allowed = [process.env.ADMIN_CHAT_ID, b.places?.admin_chat_id]
+      .filter(Boolean)
+      .map(String)
+    if (!allowed.includes(String(cb.from.id))) {
+      await answer()
+      return res.status(200).end()
+    }
 
-  // Повідомляємо клієнта
-  if (clientId && clientId !== '0') {
-    await tg('sendMessage', {
-      chat_id: clientId,
-      text:
-        (confirmed
-          ? 'Ваше бронювання підтверджено ✅'
-          : 'На жаль, заклад не може прийняти цю бронь ❌') +
-        '\n\n' +
-        details,
+    if (b.status !== 'new') {
+      await answer('Цю заявку вже оброблено')
+      return res.status(200).end()
+    }
+
+    const confirmed = action === 'ok'
+    await db(`bookings?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: confirmed ? 'confirmed' : 'rejected' }),
     })
+
+    await tg('editMessageText', {
+      chat_id: cb.message.chat.id,
+      message_id: cb.message.message_id,
+      text: `${cb.message.text}\n\n${confirmed ? '✅ Підтверджено' : '❌ Відхилено'}`,
+    })
+    await answer(confirmed ? 'Підтверджено' : 'Відхилено')
+
+    if (b.client_tg_id) {
+      await tg('sendMessage', {
+        chat_id: b.client_tg_id,
+        text:
+          (confirmed
+            ? 'Ваше бронювання підтверджено ✅'
+            : 'На жаль, заклад не може прийняти цю бронь ❌') +
+          `\n\nЗаклад: ${b.place_name}\n` +
+          `Дата: ${b.booking_date}\n` +
+          `Час: ${String(b.booking_time).slice(0, 5)}\n` +
+          `Гостей: ${b.guests}\n` +
+          `Ім'я: ${b.client_name}`,
+      })
+    }
+  } catch {
+    // Telegram не повинен повторювати запит через нашу помилку
   }
 
   return res.status(200).end()

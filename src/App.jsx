@@ -3,17 +3,10 @@ import './App.css'
 
 const CATEGORIES = ['Усі', 'Ресторани', 'Кафе', 'Кальян-бари']
 
-const PLACES = [
-  { id: 1, name: 'Trattoria Roma', category: 'Ресторани', cuisine: 'Італійська', district: 'Печерськ', hours: '12:00–23:00' },
-  { id: 2, name: 'Sakura Sushi', category: 'Ресторани', cuisine: 'Японська', district: 'Лівобережна', hours: '11:00–23:00' },
-  { id: 3, name: 'Грузинський дворик', category: 'Ресторани', cuisine: 'Грузинська', district: 'Липки', hours: '11:00–00:00' },
-  { id: 4, name: 'Кава & Книги', category: 'Кафе', cuisine: 'Кава, десерти', district: 'Хрещатик', hours: '08:00–21:00' },
-  { id: 5, name: 'Morning Bean', category: 'Кафе', cuisine: 'Сніданки', district: 'Поділ', hours: '07:30–18:00' },
-  { id: 6, name: 'Cloud 9 Lounge', category: 'Кальян-бари', cuisine: 'Кальян, коктейлі', district: 'Поділ', hours: '16:00–02:00' },
-  { id: 7, name: 'Smoke & Chill', category: 'Кальян-бари', cuisine: 'Кальян, чай', district: 'Оболонь', hours: '15:00–03:00' },
-]
-
 function App() {
+  const [places, setPlaces] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [category, setCategory] = useState('Усі')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(null)
@@ -27,9 +20,18 @@ function App() {
       tg.ready()
       tg.expand()
     }
+
+    fetch('/api/places')
+      .then((r) => {
+        if (!r.ok) throw new Error('fail')
+        return r.json()
+      })
+      .then(setPlaces)
+      .catch(() => setLoadError(true))
+      .finally(() => setLoading(false))
   }, [])
 
-  const visible = PLACES.filter(
+  const visible = places.filter(
     (p) =>
       (category === 'Усі' || p.category === category) &&
       p.name.toLowerCase().includes(query.toLowerCase())
@@ -56,14 +58,14 @@ function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          place: selected.name,
+          placeId: selected.id,
           date: f.get('date'),
           time: f.get('time'),
           guests: f.get('guests'),
           name: f.get('name'),
           phone: f.get('phone'),
           tgUser,
-                    tgUserId,
+          tgUserId,
         }),
       })
       if (!r.ok) throw new Error('fail')
@@ -97,7 +99,9 @@ function App() {
         ))}
       </div>
 
-      {visible.length === 0 && <p>Нічого не знайдено</p>}
+      {loading && <p>Завантаження…</p>}
+      {loadError && <p>Не вдалося завантажити заклади. Спробуйте пізніше.</p>}
+      {!loading && !loadError && visible.length === 0 && <p>Нічого не знайдено</p>}
 
       {visible.map((p) => (
         <div className="card" key={p.id}>
