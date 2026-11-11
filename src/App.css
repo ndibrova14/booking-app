@@ -32,13 +32,15 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .tab.active { background: var(--card); color: var(--text); border: 1px solid var(--line); }
 
 .card {
-  background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  background: var(--card); border-radius: 16px; margin-bottom: 12px;
+  border: 1px solid var(--line); overflow: hidden;
 }
-.card {
-  background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px;
-  border: 1px solid var(--line);
-}
+.card-body { padding: 16px; }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.photo { width: 100%; height: 160px; object-fit: cover; display: block; }
+.badge { flex: none; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+.badge.open { background: rgba(46, 160, 90, 0.16); color: #2a9d5c; }
+.badge.closed { background: rgba(128, 128, 128, 0.18); color: var(--hint); }
 
 .book {
   margin-top: 12px; width: 100%; padding: 12px; border: none; border-radius: 12px;

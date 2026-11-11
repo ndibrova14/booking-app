@@ -5,8 +5,30 @@ import './App.css'
 
 const CATEGORIES = ['Усі', 'Ресторани', 'Кафе', 'Кальян-бари']
 
+// Повертає true/false, а якщо годин немає або формат незрозумілий, null
+function isOpenNow(hours) {
+  const m = /(\d{1,2}):(\d{2})\s*[–-]\s*(\d{1,2}):(\d{2})/.exec(hours || '')
+  if (!m) return null
+
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Kyiv',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date())
+  const h = Number(parts.find((p) => p.type === 'hour').value) % 24
+  const min = Number(parts.find((p) => p.type === 'minute').value)
+
+  const now = h * 60 + min
+  const open = Number(m[1]) * 60 + Number(m[2])
+  const close = Number(m[3]) * 60 + Number(m[4])
+
+  return open < close ? now >= open && now < close : now >= open || now < close
+}
+
 function MapView({ places, onPick }) {
   const boxRef = useRef(null)
+  const mapRef = useRef(null)
   const layerRef = useRef(null)
 
   useEffect(() => {
@@ -16,6 +38,7 @@ function MapView({ places, onPick }) {
       attribution: '© OpenStreetMap',
     }).addTo(map)
     layerRef.current = L.layerGroup().addTo(map)
+    mapRef.current = map
     return () => map.remove()
   }, [])
 
@@ -23,16 +46,58 @@ function MapView({ places, onPick }) {
     const layer = layerRef.current
     layer.clearLayers()
     const icon = L.divIcon({ className: 'pin', iconSize: [20, 20] })
-    places
-      .filter((p) => p.lat != null && p.lng != null)
-      .forEach((p) => {
-        L.marker([p.lat, p.lng], { icon })
-          .on('click', () => onPick(p))
-          .addTo(layer)
-      })
+    const withCoords = places.filter((p) => p.lat != null && p.lng != null)
+
+    withCoords.forEach((p) => {
+      L.marker([p.lat, p.lng], { icon })
+        .on('click', () => onPick(p))
+        .addTo(layer)
+    })
+
+    if (withCoords.length > 0) {
+      mapRef.current.fitBounds(
+        withCoords.map((p) => [p.lat, p.lng]),
+        { padding: [30, 30], maxZoom: 15 }
+      )
+    }
   }, [places, onPick])
 
   return <div ref={boxRef} className="map" />
+}
+
+function PlaceCard({ place, onBook }) {
+  const open = isOpenNow(place.hours)
+  return (
+    <div className="card">
+      {place.photo_url && (
+        <img
+          className="photo"
+          src={place.photo_url}
+          alt={place.name}
+          loading="lazy"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none'
+          }}
+        />
+      )}
+      <div className="card-body">
+        <div className="card-top">
+          <h3>{place.name}</h3>
+          {open !== null && (
+            <span className={open ? 'badge open' : 'badge closed'}>
+              {open ? 'Відкрито' : 'Зачинено'}
+            </span>
+          )}
+        </div>
+        <p>{place.cuisine} · {place.district}</p>
+        {place.address && <p>{place.address}</p>}
+        <p className="hours">{place.hours}</p>
+        <button className="book" onClick={() => onBook(place)}>
+          Забронювати
+        </button>
+      </div>
+    </div>
+  )
 }
 
 function App() {
@@ -41,17 +106,19 @@ function App() {
   const [loadError, setLoadError] = useState(false)
   const [view, setView] = useState('list')
   const [category, setCategory] = useState('Усі')
+  const [onlyOpen, setOnlyOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [picked, setPicked] = useState(null)
   const [selected, setSelected] = useState(null)
   const [sent, setSent] = useState(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
-    const d = new Date()
+
+  const d = new Date()
   const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
   useEffect(() => {
-        const tg = window.Telegram?.WebApp
+    const tg = window.Telegram?.WebApp
     if (tg) {
       tg.ready()
       tg.expand()
@@ -79,6 +146,7 @@ function App() {
   const visible = places.filter(
     (p) =>
       (category === 'Усі' || p.category === category) &&
+      (!onlyOpen || isOpenNow(p.hours) === true) &&
       p.name.toLowerCase().includes(query.toLowerCase())
   )
 
@@ -144,6 +212,12 @@ function App() {
             {c}
           </button>
         ))}
+        <button
+          className={onlyOpen ? 'chip active' : 'chip'}
+          onClick={() => setOnlyOpen(!onlyOpen)}
+        >
+          Відкрито зараз
+        </button>
       </div>
 
       <div className="tabs">
@@ -168,14 +242,7 @@ function App() {
         <>
           {!loading && !loadError && visible.length === 0 && <p>Нічого не знайдено</p>}
           {visible.map((p) => (
-            <div className="card" key={p.id}>
-              <h3>{p.name}</h3>
-              <p>{p.cuisine} · {p.district}</p>
-              <p className="hours">{p.hours}</p>
-              <button className="book" onClick={() => setSelected(p)}>
-                Забронювати
-              </button>
-            </div>
+            <PlaceCard key={p.id} place={p} onBook={setSelected} />
           ))}
         </>
       )}
@@ -184,15 +251,7 @@ function App() {
         <>
           <MapView places={visible} onPick={setPicked} />
           {pickedVisible ? (
-            <div className="card">
-              <h3>{pickedVisible.name}</h3>
-              <p>{pickedVisible.cuisine} · {pickedVisible.district}</p>
-              {pickedVisible.address && <p>{pickedVisible.address}</p>}
-              <p className="hours">{pickedVisible.hours}</p>
-              <button className="book" onClick={() => setSelected(pickedVisible)}>
-                Забронювати
-              </button>
-            </div>
+            <PlaceCard place={pickedVisible} onBook={setSelected} />
           ) : (
             <p className="hint">Натисніть на точку на карті, щоб побачити заклад</p>
           )}
@@ -209,7 +268,7 @@ function App() {
                 <button className="book" onClick={closeModal}>Закрити</button>
               </>
             ) : (
-                            <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit}>
                 <label className="field">
                   <span>Дата</span>
                   <input name="date" type="date" min={today} required />
