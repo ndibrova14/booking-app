@@ -158,15 +158,13 @@ function App() {
     setError('')
   }
 
-  async function handleSubmit(e) {
+    async function handleSubmit(e) {
     e.preventDefault()
     setSending(true)
     setError('')
 
     const f = new FormData(e.target)
-    const u = window.Telegram?.WebApp?.initDataUnsafe?.user
-    const tgUser = u ? `${u.first_name || ''} ${u.username ? '@' + u.username : ''}`.trim() : ''
-    const tgUserId = u?.id || 0
+    const initData = window.Telegram?.WebApp?.initData || ''
 
     try {
       const r = await fetch('/api/booking', {
@@ -179,12 +177,18 @@ function App() {
           guests: f.get('guests'),
           name: f.get('name'),
           phone: f.get('phone'),
-          tgUser,
-          tgUserId,
+          initData,
         }),
       })
-      if (!r.ok) throw new Error('fail')
-      setSent(true)
+      if (r.status === 429) {
+        setError('Забагато заявок за короткий час. Спробуйте трохи пізніше.')
+      } else if (r.status === 401) {
+        setError('Відкрийте застосунок через Telegram і спробуйте ще раз.')
+      } else if (!r.ok) {
+        throw new Error('fail')
+      } else {
+        setSent(true)
+      }
     } catch {
       setError('Не вдалося надіслати заявку. Спробуйте ще раз.')
     }
