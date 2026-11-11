@@ -49,10 +49,19 @@ function App() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const tg = window.Telegram?.WebApp
+        const tg = window.Telegram?.WebApp
     if (tg) {
       tg.ready()
       tg.expand()
+      const dark = tg.colorScheme === 'dark'
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      const bg = dark ? '#1c1917' : '#f7f2ec'
+      try {
+        tg.setHeaderColor(bg)
+        tg.setBackgroundColor(bg)
+      } catch {
+        // старі версії Telegram цього не підтримують
+      }
     }
 
     fetch('/api/places')

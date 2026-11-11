@@ -29,15 +29,16 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
   flex: 1; padding: 9px; border: none; border-radius: 10px;
   background: transparent; color: var(--hint); font-size: 15px; cursor: pointer;
 }
-.tab.active { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+.tab.active { background: var(--card); color: var(--text); border: 1px solid var(--line); }
 
 .card {
   background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
-.card h3 { margin: 0 0 4px; font-size: 17px; }
-.card p { margin: 2px 0; color: var(--hint); font-size: 14px; }
-.card .hours { font-size: 13px; }
+.card {
+  background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px;
+  border: 1px solid var(--line);
+}
 
 .book {
   margin-top: 12px; width: 100%; padding: 12px; border: none; border-radius: 12px;

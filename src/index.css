@@ -1,11 +1,21 @@
 :root {
-  --bg: var(--tg-theme-secondary-bg-color, #f4f4f6);
-  --card: var(--tg-theme-bg-color, #ffffff);
-  --text: var(--tg-theme-text-color, #1a1a1a);
-  --hint: var(--tg-theme-hint-color, #7a7a85);
-  --accent: var(--tg-theme-button-color, #2a7fff);
-  --accent-text: var(--tg-theme-button-text-color, #ffffff);
-  --line: rgba(128, 128, 128, 0.25);
+  --bg: #f7f2ec;
+  --card: #ffffff;
+  --text: #2b2420;
+  --hint: #8a7f76;
+  --accent: #c4553a;
+  --accent-text: #ffffff;
+  --line: rgba(60, 40, 20, 0.14);
+}
+
+:root[data-theme='dark'] {
+  --bg: #1c1917;
+  --card: #2a2522;
+  --text: #f3ece6;
+  --hint: #a89d94;
+  --accent: #e0735a;
+  --accent-text: #1c1917;
+  --line: rgba(255, 255, 255, 0.14);
 }
 
 * {
@@ -18,4 +28,8 @@ body {
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+}
+
+h1, .card h3, .modal h2 {
+  font-family: Georgia, 'Times New Roman', serif;
 }
