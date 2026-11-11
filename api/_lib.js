@@ -7,11 +7,12 @@ export async function db(path, options = {}) {
   }
   if (key.startsWith('eyJ')) headers.Authorization = `Bearer ${key}`
 
-  const base = process.env.SUPABASE_URL.replace(/\/$/, '')
+  // Беремо лише початок адреси, навіть якщо у змінній є зайвий хвіст
+  const base = new URL(process.env.SUPABASE_URL.trim()).origin
   const r = await fetch(`${base}/rest/v1/${path}`, { ...options, headers })
-  if (!r.ok) throw new Error(`db ${r.status}`)
-
   const text = await r.text()
+
+  if (!r.ok) throw new Error(`db ${r.status} ${text.slice(0, 200)}`)
   return text ? JSON.parse(text) : null
 }
 
