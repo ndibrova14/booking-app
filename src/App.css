@@ -9,7 +9,13 @@ h1 { font-size: 22px; margin: 0 0 12px; }
 .card p { margin: 2px 0; color: #555; }
 .hours { font-size: 13px; }
 .book { margin-top: 10px; width: 100%; padding: 10px; border: none; border-radius: 10px; background: #2a7fff; color: #fff; font-size: 16px; cursor: pointer; }
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: flex-end; justify-content: center; }
+.overlay { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.5); display: flex; align-items: flex-end; justify-content: center; }
 .modal { background: #fff; width: 100%; max-width: 480px; padding: 20px; border-radius: 18px 18px 0 0; }
 .modal form { display: flex; flex-direction: column; gap: 10px; }
 .modal input { padding: 10px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; }
+.tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.tab { flex: 1; padding: 10px; border: 1px solid #ddd; background: #fff; border-radius: 10px; font-size: 15px; cursor: pointer; }
+.tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.map { height: 50vh; border-radius: 14px; margin-bottom: 12px; }
+.pin { width: 20px; height: 20px; background: #2a7fff; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 1px 5px rgba(0,0,0,0.45); }
+.hint { color: #777; text-align: center; }
