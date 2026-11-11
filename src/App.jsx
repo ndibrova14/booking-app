@@ -26,7 +26,54 @@ function isOpenNow(hours) {
   return open < close ? now >= open && now < close : now >= open || now < close
 }
 
-function MapView({ places, onPick }) {
+// Відстань між двома точками в кілометрах
+function distanceKm(a, b) {
+  const R = 6371
+  const toRad = (x) => (x * Math.PI) / 180
+  const dLat = toRad(b.lat - a.lat)
+  const dLng = toRad(b.lng - a.lng)
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(s))
+}
+
+function formatDistance(km) {
+  if (km < 1) return `${Math.max(10, Math.round((km * 1000) / 10) * 10)} м`
+  return `${km.toFixed(1).replace('.', ',')} км`
+}
+
+// Місцезнаходження: спершу через Telegram, інакше через браузер
+function getUserLocation() {
+  return new Promise((resolve, reject) => {
+    const viaBrowser = () => {
+      if (!navigator.geolocation) return reject(new Error('unsupported'))
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => reject(new Error('denied')),
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      )
+    }
+
+    const tg = window.Telegram?.WebApp
+    const lm = tg?.LocationManager
+    if (lm && tg.isVersionAtLeast && tg.isVersionAtLeast('8.0')) {
+      const ask = () => {
+        if (!lm.isLocationAvailable) return viaBrowser()
+        lm.getLocation((loc) => {
+          if (loc) resolve({ lat: loc.latitude, lng: loc.longitude })
+          else reject(new Error('denied'))
+        })
+      }
+      if (lm.isInited) ask()
+      else lm.init(ask)
+    } else {
+      viaBrowser()
+    }
+  })
+}
+
+function MapView({ places, me, onPick }) {
   const boxRef = useRef(null)
   const mapRef = useRef(null)
   const layerRef = useRef(null)
@@ -54,13 +101,22 @@ function MapView({ places, onPick }) {
         .addTo(layer)
     })
 
-    if (withCoords.length > 0) {
-      mapRef.current.fitBounds(
-        withCoords.map((p) => [p.lat, p.lng]),
-        { padding: [30, 30], maxZoom: 15 }
-      )
+    if (me) {
+      L.marker([me.lat, me.lng], {
+        icon: L.divIcon({ className: 'pin me', iconSize: [20, 20] }),
+        interactive: false,
+        zIndexOffset: 1000,
+      }).addTo(layer)
     }
-  }, [places, onPick])
+
+    // З геолокацією показуємо вас і чотири найближчі заклади (список уже відсортований)
+    const focus = me ? withCoords.slice(0, 4) : withCoords
+    const points = focus.map((p) => [p.lat, p.lng])
+    if (me) points.push([me.lat, me.lng])
+    if (points.length > 0) {
+      mapRef.current.fitBounds(points, { padding: [30, 30], maxZoom: 15 })
+    }
+  }, [places, me, onPick])
 
   return <div ref={boxRef} className="map" />
 }
@@ -91,6 +147,9 @@ function PlaceCard({ place, onBook }) {
         </div>
         <p>{place.cuisine} · {place.district}</p>
         {place.address && <p>{place.address}</p>}
+        {place.distance != null && (
+          <p className="dist">{formatDistance(place.distance)} від вас</p>
+        )}
         <p className="hours">{place.hours}</p>
         <button className="book" onClick={() => onBook(place)}>
           Забронювати
@@ -107,6 +166,9 @@ function App() {
   const [view, setView] = useState('list')
   const [category, setCategory] = useState('Усі')
   const [onlyOpen, setOnlyOpen] = useState(false)
+  const [me, setMe] = useState(null)
+  const [locating, setLocating] = useState(false)
+  const [locError, setLocError] = useState('')
   const [query, setQuery] = useState('')
   const [picked, setPicked] = useState(null)
   const [selected, setSelected] = useState(null)
@@ -143,12 +205,39 @@ function App() {
       .finally(() => setLoading(false))
   }, [])
 
-  const visible = places.filter(
+  async function toggleNearMe() {
+    setLocError('')
+    if (me) {
+      setMe(null)
+      return
+    }
+    setLocating(true)
+    try {
+      setMe(await getUserLocation())
+    } catch {
+      setLocError('Не вдалося визначити місцезнаходження. Дозвольте доступ до геолокації для Telegram в налаштуваннях телефона.')
+    }
+    setLocating(false)
+  }
+
+  const filtered = places.filter(
     (p) =>
       (category === 'Усі' || p.category === category) &&
       (!onlyOpen || isOpenNow(p.hours) === true) &&
       p.name.toLowerCase().includes(query.toLowerCase())
   )
+
+  const visible = me
+    ? filtered
+        .map((p) => ({
+          ...p,
+          distance:
+            p.lat != null && p.lng != null
+              ? distanceKm(me, { lat: p.lat, lng: p.lng })
+              : null,
+        }))
+        .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity))
+    : filtered
 
   const pickedVisible = visible.find((p) => p.id === picked?.id)
 
@@ -158,7 +247,7 @@ function App() {
     setError('')
   }
 
-    async function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     setSending(true)
     setError('')
@@ -180,6 +269,11 @@ function App() {
           initData,
         }),
       })
+      if (r.status === 400) {
+        setError('Перевірте дані: телефон (від 5 символів), дату, час і кількість людей.')
+        setSending(false)
+        return
+      }
       if (r.status === 429) {
         setError('Забагато заявок за короткий час. Спробуйте трохи пізніше.')
       } else if (r.status === 401) {
@@ -222,7 +316,16 @@ function App() {
         >
           Відкрито зараз
         </button>
+        <button
+          className={me ? 'chip active' : 'chip'}
+          onClick={toggleNearMe}
+          disabled={locating}
+        >
+          {locating ? 'Шукаємо вас…' : '📍 Поруч зі мною'}
+        </button>
       </div>
+
+      {locError && <p className="hint">{locError}</p>}
 
       <div className="tabs">
         <button
@@ -253,7 +356,7 @@ function App() {
 
       {view === 'map' && !loading && !loadError && (
         <>
-          <MapView places={visible} onPick={setPicked} />
+          <MapView places={visible} me={me} onPick={setPicked} />
           {pickedVisible ? (
             <PlaceCard place={pickedVisible} onBook={setSelected} />
           ) : (
