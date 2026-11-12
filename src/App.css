@@ -83,7 +83,7 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .pin.me { background: #2e9d5b; }
 .card .dist { color: var(--accent); font-weight: 600; font-size: 13px; }
 .chip:disabled { opacity: 0.6; }
-.actions { display: flex; gap: 8px; margin-top: 12px; }
+.actions { display: flex; gap: 6px; margin-top: 10px; }
 .actions .book { margin-top: 0; flex: 1; }
 .menu-btn {
   flex: none; padding: 12px 18px; border-radius: 12px; font-size: 16px; font-weight: 600;
@@ -116,16 +116,16 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 
 /* Catalog refresh */
 .app { padding-top: 12px; }
-.topbar { margin-bottom: 16px; }
+.topbar { margin-bottom: 12px; }
 .catalog-title h1 { margin: 2px 0 0; font-size: 28px; line-height: 1.15; }
 .city-label { margin: 0; font-size: 12px; font-weight: 600; color: var(--hint); letter-spacing: .06em; }
 .cab-btn { min-height: 44px; font-size: 13px; }
-.search { min-height: 48px; border-radius: 14px; }
-.chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
-.chips .chip { width: 100%; padding: 9px 10px; border-radius: 12px; font-size: 14px; }
+.search { min-height: 44px; padding: 10px 14px; border-radius: 14px; }
+.chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+.chips .chip { width: 100%; padding: 6px 10px; border-radius: 12px; font-size: 14px; }
 .chips .chip.active { background: var(--card); color: var(--accent); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); font-weight: 600; }
-.quick-filters { gap: 8px; }
-.quick-filters .chip { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 10px; border-radius: 12px; font-size: 13px; }
+.quick-filters { gap: 6px; margin-bottom: 8px; }
+.quick-filters .chip { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 10px; border-radius: 12px; font-size: 13px; }
 .location-icon { width: 16px; height: 16px; flex: none; }
 .results-bar p { font-size: 13px; }
 .tabs { margin-bottom: 16px; border-radius: 12px; }
@@ -140,8 +140,8 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .place-location p { margin: 0; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
 .place-distance { color: var(--accent); font-weight: 600; }
 .place-schedule { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 12px; }
-.place-schedule .badge { padding: 5px 9px; font-size: 11px; line-height: 1.4; }
-.place-schedule .badge.closed { background: var(--bg); color: var(--hint); }
+.place-title-row .badge { padding: 5px 9px; font-size: 11px; line-height: 1.4; }
+.place-title-row .badge.closed { background: var(--bg); color: var(--hint); }
 .place-hours { font-size: 12px; color: var(--hint); }
 .place-card .actions { margin-top: 16px; }
 .place-card .book, .place-card .menu-btn { min-height: 46px; font-size: 14px; border-radius: 12px; padding: 11px 14px; }
@@ -152,3 +152,9 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
   .place-card .card-body { padding: 16px; }
   .place-heading h3 { font-size: 20px; }
 }
+
+.place-title-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 10px; }
+.place-title-row h3 { flex: 1 1 170px; min-width: 0; }
+.place-title-row .badge { flex: 0 0 auto; margin-top: 2px; }
+.place-schedule { margin-top: 8px; }
+.place-card .actions { margin-top: 12px; }

@@ -134,10 +134,7 @@ function LocationIcon() {
 
 function PlaceCard({ place, onBook }) {
   const open = isOpenNow(place.hours)
-  const hoursMatch = /^\s*(\d{1,2}:\d{2})\s*[–—-]\s*(\d{1,2}:\d{2})\s*$/.exec(place.hours || '')
-  const statusText = open === null ? '' : open
-    ? `Відкрито${hoursMatch ? ` до ${hoursMatch[2]}` : ''}`
-    : `Зачинено${hoursMatch ? ` · з ${hoursMatch[1]}` : ''}`
+  const statusText = open === null ? '' : open ? 'Відкрито' : 'Зачинено'
   const hasMenu = /^https?:\/\//i.test(place.menu_url || '')
   return (
     <article className="card place-card">
@@ -154,7 +151,10 @@ function PlaceCard({ place, onBook }) {
       )}
       <div className="card-body">
         <div className="place-heading">
-          <h3>{place.name}</h3>
+          <div className="place-title-row">
+            <h3>{place.name}</h3>
+            {open !== null && <span className={open ? 'badge open' : 'badge closed'}>{statusText}</span>}
+          </div>
           {place.cuisine && <p className="place-cuisine">{place.cuisine}</p>}
         </div>
         {(place.address || place.district || place.distance != null) && (
@@ -166,7 +166,6 @@ function PlaceCard({ place, onBook }) {
           </div>
         )}
         <div className="place-schedule">
-          {open !== null && <span className={open ? 'badge open' : 'badge closed'}>{statusText}</span>}
           <span className="place-hours">{place.hours || 'Графік уточнюється'}</span>
         </div>
         <div className="actions">
