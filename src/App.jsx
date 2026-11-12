@@ -1,16 +1,30 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense, Component } from 'react'
 import './App.css'
 import { trackEvent } from './analytics.js'
-import Cabinet from './Cabinet.jsx'
-import MyBookings from './MyBookings.jsx'
 import useFavorites from './useFavorites.js'
-import FilterSheet from './FilterSheet.jsx'
-import InteractiveMap from './InteractiveMap.jsx'
-import PlaceDetails from './PlaceDetails.jsx'
 import BookingContactFields from './BookingContactFields.jsx'
 import { telegramContactId, writeContact } from './bookingContact.js'
 import { coordinates, routeUrl } from './mapHelpers.js'
 import { filterOptions, emptyFilters, countFilters, filterPlaces, AMENITY_FILTERS } from './catalogFilters.js'
+
+const Cabinet = lazy(() => import('./Cabinet.jsx'))
+const MyBookings = lazy(() => import('./MyBookings.jsx'))
+const FilterSheet = lazy(() => import('./FilterSheet.jsx'))
+const InteractiveMap = lazy(() => import('./InteractiveMap.jsx'))
+const PlaceDetails = lazy(() => import('./PlaceDetails.jsx'))
+
+function PageLoading({ onClose }) {
+  return <div className="app"><p role="status">Завантажуємо розділ…</p><button type="button" className="menu-btn" onClick={onClose}>До каталогу</button></div>
+}
+function OverlayLoading({ onClose }) {
+  const dialog = useRef(null)
+  useEffect(() => {
+    const node = dialog.current
+    node.showModal()
+    return () => node.close()
+  }, [])
+  return <dialog ref={dialog} className="feature-loading-dialog" onCancel={(event) => { event.preventDefault(); onClose() }} aria-label="Завантаження розділу"><p role="status">Завантажуємо…</p><button type="button" className="menu-btn" onClick={onClose}>Скасувати</button></dialog>
+}
 
 const CATEGORIES = ['Усі', 'Ресторани', 'Кафе', 'Кальян-бари']
 
@@ -169,7 +183,7 @@ function PlaceCard({ place, onBook, onDetails, favorites }) {
 }
 
 
-function App() {
+function AppContent() {
   const favorites = useFavorites()
   const [onlyFavorites, setOnlyFavorites] = useState(false)
   const [places, setPlaces] = useState([])
@@ -388,8 +402,8 @@ function App() {
       setSending(false)
     }
   }
-  if (screen === 'my-bookings') return <MyBookings onBack={() => setScreen('catalog')} />
-  if (screen === 'cabinet') return <Cabinet onBack={() => setScreen('catalog')} onPlaceSaved={(updated) => setPlaces((old) => old.map((p) => p.id === updated.id ? { ...p, ...updated } : p))} />
+  if (screen === 'my-bookings') return <Suspense fallback={<PageLoading onClose={() => setScreen('catalog')} />}><MyBookings onBack={() => setScreen('catalog')} /></Suspense>
+  if (screen === 'cabinet') return <Suspense fallback={<PageLoading onClose={() => setScreen('catalog')} />}><Cabinet onBack={() => setScreen('catalog')} onPlaceSaved={(updated) => setPlaces((old) => old.map((p) => p.id === updated.id ? { ...p, ...updated } : p))} /></Suspense>
   
   return (
     <div className={view === 'map' ? 'app map-mode' : 'app'}>
@@ -430,10 +444,10 @@ function App() {
       </div>
       {filterChips.length > 0 && <div className="selected-filters" aria-label="Обрані фільтри">{filterChips.map((chip) => <button type="button" key={chip.key} aria-label={`Прибрати фільтр: ${chip.label}`} onClick={chip.remove}>{chip.label}<span aria-hidden="true">×</span></button>)}</div>}
       <label className="catalog-sort"><span>Сортування</span><select aria-label="Сортування закладів" value={me ? 'near' : 'default'} disabled={locating} onChange={(e) => { if ((e.target.value === 'near') !== Boolean(me)) toggleNearMe() }}><option value="default">За замовчуванням</option><option value="near">Найближчі</option></select>{locating && <span role="status">Шукаємо вас…</span>}</label>
-      {filtersOpen && <FilterSheet value={filters} categories={CATEGORIES} renderCategoryIcon={(name) => <CatalogIcon name={name} />} districts={districtOptions} cuisines={cuisineOptions}
+      {filtersOpen && <Suspense fallback={<OverlayLoading onClose={() => setFiltersOpen(false)} />}><FilterSheet value={filters} categories={CATEGORIES} renderCategoryIcon={(name) => <CatalogIcon name={name} />} districts={districtOptions} cuisines={cuisineOptions}
         unavailable={loading || loadError || (onlyFavorites && (favorites.loading || Boolean(favorites.error) || !favorites.enabled))}
         resultCount={(draft) => filterPlaces(places, draft, filterContext, isOpenNow).length}
-        onClose={() => setFiltersOpen(false)} onApply={(draft) => { setFilters(draft); setFiltersOpen(false); setPicked(null) }} />}
+        onClose={() => setFiltersOpen(false)} onApply={(draft) => { setFilters(draft); setFiltersOpen(false); setPicked(null) }} /></Suspense>}
 
       {!loading && !loadError && (
         <div className="results-bar">
@@ -473,7 +487,7 @@ function App() {
       )}
 
       {view === 'map' && !loading && !loadError && (
-        <InteractiveMap places={visible} me={me} selectedId={pickedVisible?.id} onPick={(place) => { trackEvent('place_view', place.id); setPicked(place) }} onLocate={locateOnMap} locating={locating} focusRequest={mapFocusRequest}>
+        <Suspense fallback={<section className="interactive-map map-loading" role="status">Завантажуємо карту…</section>}><InteractiveMap places={visible} me={me} selectedId={pickedVisible?.id} onPick={(place) => { trackEvent('place_view', place.id); setPicked(place) }} onLocate={locateOnMap} locating={locating} focusRequest={mapFocusRequest}>
           {pickedVisible && <article className="map-place-card" aria-label={`Вибраний заклад: ${pickedVisible.name}`}>
             <div className="map-place-heading"><h2>{pickedVisible.name}</h2><button type="button" className="favorite-button" aria-label={favorites.ids.includes(String(pickedVisible.id)) ? 'Прибрати з обраного' : 'Додати в обране'} aria-pressed={favorites.ids.includes(String(pickedVisible.id))} disabled={favorites.loading || Boolean(favorites.error) || favorites.busyIds.includes(String(pickedVisible.id))} onClick={() => favorites.toggle(pickedVisible.id)}><HeartIcon filled={favorites.ids.includes(String(pickedVisible.id))} /></button><button type="button" className="map-card-close" aria-label="Закрити картку закладу" onClick={() => setPicked(null)}>✕</button></div>
             <p>{pickedVisible.cuisine}</p>
@@ -482,10 +496,10 @@ function App() {
             <div className="map-place-links"><button type="button" onClick={() => openDetails(pickedVisible)}>Детальніше</button><button type="button" onClick={() => { const url = routeUrl(pickedVisible); if (url) openMenu(url) }} disabled={!coordinates(pickedVisible)}>Маршрут ↗</button>{/^https?:\/\//i.test(pickedVisible.menu_url || '') && <button type="button" onClick={() => openMenu(pickedVisible.menu_url)}>Меню ↗</button>}</div>
             <button type="button" className="book" onClick={() => openBooking(pickedVisible)}>Забронювати</button>
           </article>}
-        </InteractiveMap>
+        </InteractiveMap></Suspense>
       )}
 
-      {detailPlace && <PlaceDetails key={detailPlace.id} place={detailPlace} open={isOpenNow(detailPlace.hours)} favorites={favorites} openLink={openMenu} renderHeart={(filled) => <HeartIcon filled={filled} />} onClose={() => setDetailPlace(null)} onBook={(place) => { setDetailPlace(null); openBooking(place) }} />}
+      {detailPlace && <Suspense fallback={<OverlayLoading onClose={() => setDetailPlace(null)} />}><PlaceDetails key={detailPlace.id} place={detailPlace} open={isOpenNow(detailPlace.hours)} favorites={favorites} openLink={openMenu} renderHeart={(filled) => <HeartIcon filled={filled} />} onClose={() => setDetailPlace(null)} onBook={(place) => { setDetailPlace(null); openBooking(place) }} /></Suspense>}
       {selected && (
         <div className="overlay" onClick={closeModal}>
           <div className="modal" role="dialog" aria-modal="true" aria-label={selected.name} onClick={(e) => e.stopPropagation()}>
@@ -537,5 +551,15 @@ function App() {
     </div>
   )
 }
+
+class FeatureBoundary extends Component {
+  state = { failed: false }
+  static getDerivedStateFromError() { return { failed: true } }
+  render() {
+    if (this.state.failed) return <div className="app"><h1>Не вдалося відкрити розділ</h1><p>Перевірте інтернет і оновіть застосунок.</p><button type="button" className="book" onClick={() => window.location.reload()}>Оновити застосунок</button></div>
+    return this.props.children
+  }
+}
+function App() { return <FeatureBoundary><AppContent /></FeatureBoundary> }
 
 export default App

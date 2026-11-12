@@ -51,7 +51,8 @@ test('frontend deduplicates repeated interactions and records an opening before 
  try{
   const analytics=await import(`../src/analytics.js?test=${crypto.randomUUID()}`)
   analytics.trackEvent('app_open');analytics.trackEvent('app_open');analytics.trackEvent('place_view',1);analytics.trackEvent('place_view',1);analytics.trackEvent('booking_form_open',1)
-  await new Promise((resolve)=>setTimeout(resolve,0))
+  assert.equal(events.length,0)
+  await analytics.flushAnalytics()
   assert.deepEqual(events.map((event)=>event.eventType),['app_open','place_view','booking_form_open'])
   assert.equal(new Set(events.map((event)=>event.sessionId)).size,1)
  }finally{globalThis.fetch=oldFetch;globalThis.window=oldWindow}
