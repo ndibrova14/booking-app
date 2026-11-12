@@ -5,6 +5,7 @@ import MyBookings from './MyBookings.jsx'
 import useFavorites from './useFavorites.js'
 import FilterSheet from './FilterSheet.jsx'
 import InteractiveMap from './InteractiveMap.jsx'
+import PlaceDetails from './PlaceDetails.jsx'
 import { coordinates, routeUrl } from './mapHelpers.js'
 import { filterOptions, emptyFilters, countFilters, filterPlaces } from './catalogFilters.js'
 
@@ -104,7 +105,7 @@ function HeartIcon({ filled = false }) {
   return <svg viewBox="0 0 24 24" className="heart-icon" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" /></svg>
 }
 
-function PlaceCard({ place, onBook, favorites }) {
+function PlaceCard({ place, onBook, onDetails, favorites }) {
   const open = isOpenNow(place.hours)
   const statusText = open === null ? '' : open ? 'Відкрито' : 'Зачинено'
   const hasMenu = /^https?:\/\//i.test(place.menu_url || '')
@@ -124,7 +125,7 @@ function PlaceCard({ place, onBook, favorites }) {
       <div className="card-body">
         <div className="place-heading">
           <div className="place-title-row">
-            <h3>{place.name}</h3>
+            <h3><button type="button" className="place-name-link" onClick={() => onDetails(place)}>{place.name}</button></h3>
             <button type="button" className={favorites.ids.includes(String(place.id)) ? 'favorite-button saved' : 'favorite-button'}
               aria-label={`${favorites.ids.includes(String(place.id)) ? 'Прибрати з обраного' : 'Додати в обране'}: ${place.name}`}
               aria-pressed={favorites.ids.includes(String(place.id))}
@@ -148,6 +149,7 @@ function PlaceCard({ place, onBook, favorites }) {
           <span className="place-hours">{place.hours || 'Графік уточнюється'}</span>
         </div>
         {place.pet_friendly === true && <p className="pet-friendly-label"><CatalogIcon name="paw" />Можна з тваринами</p>}
+        <button type="button" className="place-details-link" onClick={() => onDetails(place)}>Детальніше про заклад <span aria-hidden="true">→</span></button>
         <div className="actions">
           {hasMenu && (
             <button className="menu-btn" onClick={() => openMenu(place.menu_url)}>
@@ -181,6 +183,7 @@ function App() {
   const [query, setQuery] = useState('')
   const [picked, setPicked] = useState(null)
   const [selected, setSelected] = useState(null)
+  const [detailPlace, setDetailPlace] = useState(null)
   const [sent, setSent] = useState(false)
   const attemptRef = useRef(null)
   const [delivery, setDelivery] = useState('')
@@ -445,7 +448,7 @@ function App() {
         <>
           {!loading && !loadError && visible.length === 0 && <p>{onlyFavorites && (favorites.loading || favorites.error || !favorites.enabled) ? '' : onlyFavorites && favorites.ids.length === 0 ? 'В обраному ще немає закладів. Натисніть сердечко на картці в каталозі.' : 'Нічого не знайдено. Змініть пошук або скиньте фільтри.'}</p>}
           {visible.map((p) => (
-            <PlaceCard key={p.id} place={p} onBook={setSelected} favorites={favorites} />
+            <PlaceCard key={p.id} place={p} onBook={setSelected} onDetails={setDetailPlace} favorites={favorites} />
           ))}
         </>
       )}
@@ -457,12 +460,13 @@ function App() {
             <p>{pickedVisible.cuisine}</p>
             <p>{pickedVisible.address || pickedVisible.district}{pickedVisible.distance != null ? ` · ${formatDistance(pickedVisible.distance)} по прямій` : ''}</p>
             <p><span className={isOpenNow(pickedVisible.hours) === true ? 'map-open-status' : ''}>{isOpenNow(pickedVisible.hours) === null ? 'Графік уточнюється' : isOpenNow(pickedVisible.hours) ? 'Відкрито' : 'Зачинено'}</span>{pickedVisible.hours ? ` · ${pickedVisible.hours}` : ''}</p>
-            <div className="map-place-links"><button type="button" onClick={() => { const url = routeUrl(pickedVisible); if (url) openMenu(url) }} disabled={!coordinates(pickedVisible)}>Маршрут ↗</button>{/^https?:\/\//i.test(pickedVisible.menu_url || '') && <button type="button" onClick={() => openMenu(pickedVisible.menu_url)}>Меню ↗</button>}</div>
+            <div className="map-place-links"><button type="button" onClick={() => setDetailPlace(pickedVisible)}>Детальніше</button><button type="button" onClick={() => { const url = routeUrl(pickedVisible); if (url) openMenu(url) }} disabled={!coordinates(pickedVisible)}>Маршрут ↗</button>{/^https?:\/\//i.test(pickedVisible.menu_url || '') && <button type="button" onClick={() => openMenu(pickedVisible.menu_url)}>Меню ↗</button>}</div>
             <button type="button" className="book" onClick={() => setSelected(pickedVisible)}>Забронювати</button>
           </article>}
         </InteractiveMap>
       )}
 
+      {detailPlace && <PlaceDetails key={detailPlace.id} place={detailPlace} open={isOpenNow(detailPlace.hours)} favorites={favorites} openLink={openMenu} renderHeart={(filled) => <HeartIcon filled={filled} />} onClose={() => setDetailPlace(null)} onBook={(place) => { setDetailPlace(null); setSelected(place) }} />}
       {selected && (
         <div className="overlay" onClick={closeModal}>
           <div className="modal" role="dialog" aria-modal="true" aria-label={selected.name} onClick={(e) => e.stopPropagation()}>
