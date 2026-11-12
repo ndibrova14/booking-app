@@ -128,11 +128,19 @@ function openMenu(url) {
   else window.open(url, '_blank', 'noopener')
 }
 
+function LocationIcon() {
+  return <svg className="location-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></svg>
+}
+
 function PlaceCard({ place, onBook }) {
   const open = isOpenNow(place.hours)
+  const hoursMatch = /^\s*(\d{1,2}:\d{2})\s*[–—-]\s*(\d{1,2}:\d{2})\s*$/.exec(place.hours || '')
+  const statusText = open === null ? '' : open
+    ? `Відкрито${hoursMatch ? ` до ${hoursMatch[2]}` : ''}`
+    : `Зачинено${hoursMatch ? ` · з ${hoursMatch[1]}` : ''}`
   const hasMenu = /^https?:\/\//i.test(place.menu_url || '')
   return (
-    <div className="card">
+    <article className="card place-card">
       {place.photo_url && (
         <img
           className="photo"
@@ -145,20 +153,22 @@ function PlaceCard({ place, onBook }) {
         />
       )}
       <div className="card-body">
-        <div className="card-top">
+        <div className="place-heading">
           <h3>{place.name}</h3>
-          {open !== null && (
-            <span className={open ? 'badge open' : 'badge closed'}>
-              {open ? 'Відкрито' : 'Зачинено'}
-            </span>
-          )}
+          {place.cuisine && <p className="place-cuisine">{place.cuisine}</p>}
         </div>
-        <p>{place.cuisine} · {place.district}</p>
-        {place.address && <p>{place.address}</p>}
-        {place.distance != null && (
-          <p className="dist">{formatDistance(place.distance)} від вас</p>
+        {(place.address || place.district || place.distance != null) && (
+          <div className="place-location">
+            <LocationIcon />
+            <p>{place.address || place.district}
+              {place.distance != null && <span className="place-distance"> · {formatDistance(place.distance)}</span>}
+            </p>
+          </div>
         )}
-        <p className="hours">{place.hours}</p>
+        <div className="place-schedule">
+          {open !== null && <span className={open ? 'badge open' : 'badge closed'}>{statusText}</span>}
+          <span className="place-hours">{place.hours || 'Графік уточнюється'}</span>
+        </div>
         <div className="actions">
           {hasMenu && (
             <button className="menu-btn" onClick={() => openMenu(place.menu_url)}>
@@ -170,7 +180,7 @@ function PlaceCard({ place, onBook }) {
           </button>
         </div>
       </div>
-    </div>
+    </article>
   )
 }
 
@@ -360,7 +370,7 @@ function App() {
   return (
     <div className="app">
          <div className="topbar">
-        <h1>Заклади міста</h1>
+        <div className="catalog-title"><p className="city-label">Київ</p><h1>Де поїмо?</h1></div>
         {isAdmin && (
           <button className="cab-btn" onClick={() => setScreen('cabinet')}>
             Кабінет
@@ -402,7 +412,7 @@ function App() {
           onClick={toggleNearMe}
           disabled={locating}
         >
-          {locating ? 'Шукаємо вас…' : '📍 Поруч зі мною'}
+          <LocationIcon />{locating ? 'Шукаємо вас…' : 'Поруч зі мною'}
         </button>
       </div>
 

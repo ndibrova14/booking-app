@@ -113,3 +113,42 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .results-bar strong { color: var(--text); }
 .reset-filters { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--accent); font-size: 14px; cursor: pointer; }
 .chip:focus-visible, .reset-filters:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Catalog refresh */
+.app { padding-top: 12px; }
+.topbar { margin-bottom: 16px; }
+.catalog-title h1 { margin: 2px 0 0; font-size: 28px; line-height: 1.15; }
+.city-label { margin: 0; font-size: 12px; font-weight: 600; color: var(--hint); letter-spacing: .06em; }
+.cab-btn { min-height: 44px; font-size: 13px; }
+.search { min-height: 48px; border-radius: 14px; }
+.chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.chips .chip { width: 100%; padding: 9px 10px; border-radius: 12px; font-size: 14px; }
+.chips .chip.active { background: var(--card); color: var(--accent); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); font-weight: 600; }
+.quick-filters { gap: 8px; }
+.quick-filters .chip { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 10px; border-radius: 12px; font-size: 13px; }
+.location-icon { width: 16px; height: 16px; flex: none; }
+.results-bar p { font-size: 13px; }
+.tabs { margin-bottom: 16px; border-radius: 12px; }
+.tab { min-height: 44px; font-size: 14px; }
+.place-card { border-radius: 20px; margin-bottom: 16px; box-shadow: 0 3px 12px rgba(43,36,32,.035); }
+.place-card .photo { height: auto; aspect-ratio: 16 / 9; object-fit: cover; }
+.place-card .card-body { padding: 18px; }
+.place-heading h3 { margin: 0; font-size: 22px; line-height: 1.22; overflow-wrap: anywhere; }
+.place-card .place-cuisine { margin: 6px 0 0; font-size: 14px; line-height: 1.4; color: var(--hint); }
+.place-location { display: flex; align-items: flex-start; gap: 6px; margin-top: 12px; color: var(--hint); }
+.place-location .location-icon { margin-top: 2px; }
+.place-location p { margin: 0; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.place-distance { color: var(--accent); font-weight: 600; }
+.place-schedule { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 12px; }
+.place-schedule .badge { padding: 5px 9px; font-size: 11px; line-height: 1.4; }
+.place-schedule .badge.closed { background: var(--bg); color: var(--hint); }
+.place-hours { font-size: 12px; color: var(--hint); }
+.place-card .actions { margin-top: 16px; }
+.place-card .book, .place-card .menu-btn { min-height: 46px; font-size: 14px; border-radius: 12px; padding: 11px 14px; }
+:root { --hint: #71665e; }
+:root[data-theme='dark'] { --hint: #b9ada4; }
+@media (max-width: 350px) {
+  .catalog-title h1 { font-size: 25px; }
+  .place-card .card-body { padding: 16px; }
+  .place-heading h3 { font-size: 20px; }
+}
