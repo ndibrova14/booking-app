@@ -5,6 +5,8 @@ import './App.css'
 import Cabinet from './Cabinet.jsx'
 import MyBookings from './MyBookings.jsx'
 import useFavorites from './useFavorites.js'
+import FilterSheet from './FilterSheet.jsx'
+import { filterOptions, emptyFilters, countFilters, filterPlaces } from './catalogFilters.js'
 
 const CATEGORIES = ['Усі', 'Ресторани', 'Кафе', 'Кальян-бари']
 
@@ -218,8 +220,8 @@ function App() {
   const [loadError, setLoadError] = useState(false)
   const [view, setView] = useState('list')
   const [category, setCategory] = useState('Усі')
-  const [onlyOpen, setOnlyOpen] = useState(false)
-  const [onlyPetFriendly, setOnlyPetFriendly] = useState(false)
+  const [filters, setFilters] = useState(emptyFilters)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [me, setMe] = useState(null)
   const [locating, setLocating] = useState(false)
   const locationRequest = useRef(0)
@@ -294,27 +296,25 @@ function App() {
     if (request === locationRequest.current) setLocating(false)
   }
 
-  const hasFilters = category !== 'Усі' || onlyOpen || onlyPetFriendly || Boolean(me) || locating || Boolean(query.trim()) || Boolean(locError)
+  const filterCount = countFilters(filters)
+  const hasFilters = category !== 'Усі' || filterCount > 0 || Boolean(query.trim())
   function resetFilters() {
-    locationRequest.current++
     setCategory('Усі')
-    setOnlyOpen(false)
-    setOnlyPetFriendly(false)
-    setMe(null)
-    setLocating(false)
-    setLocError('')
+    setFilters(emptyFilters())
     setQuery('')
     setPicked(null)
   }
-
-  const filtered = places.filter(
-    (p) =>
-      (!onlyFavorites || favorites.ids.includes(String(p.id))) &&
-      (category === 'Усі' || p.category === category) &&
-      (!onlyOpen || isOpenNow(p.hours) === true) &&
-      (!onlyPetFriendly || p.pet_friendly === true) &&
-      p.name.toLowerCase().includes(query.trim().toLowerCase())
-  )
+  const districtOptions = filterOptions(places, 'district')
+  const cuisineOptions = filterOptions(places, 'cuisine')
+  const filterContext = { category, query, onlyFavorites, favoriteIds: favorites.ids }
+  const filtered = filterPlaces(places, filters, filterContext, isOpenNow)
+  const filterChips = [
+    ...filters.districts.map((key) => ({ key: `district-${key}`, label: districtOptions.find(([id]) => id === key)?.[1] || key,
+      remove: () => setFilters((old) => ({ ...old, districts: old.districts.filter((id) => id !== key) })) })),
+    ...filters.cuisines.map((key) => ({ key: `cuisine-${key}`, label: cuisineOptions.find(([id]) => id === key)?.[1] || key,
+      remove: () => setFilters((old) => ({ ...old, cuisines: old.cuisines.filter((id) => id !== key) })) })),
+    ...(filters.petFriendly ? [{ key: 'pets', label: 'Можна з тваринами', remove: () => setFilters((old) => ({ ...old, petFriendly: false })) }] : []),
+  ]
 
   const visible = me
     ? filtered
@@ -443,30 +443,18 @@ function App() {
           </button>
         ))}
       </div>
-      <div className="quick-filters" role="group" aria-label="Додаткові фільтри">
-        <button
-          aria-pressed={onlyOpen}
-          className={onlyOpen ? 'chip active' : 'chip'}
-          onClick={() => setOnlyOpen(!onlyOpen)}
-        >
-          <CatalogIcon name="clock" />Відкрито зараз
-        </button>
-        <button
-          aria-pressed={Boolean(me)}
-          className={me ? 'chip active' : 'chip'}
-          onClick={toggleNearMe}
-          disabled={locating}
-        >
-          <LocationIcon />{locating ? 'Шукаємо вас…' : 'Поруч зі мною'}
-        </button>
-        <button
-          aria-pressed={onlyPetFriendly}
-          className={onlyPetFriendly ? 'chip active' : 'chip'}
-          onClick={() => setOnlyPetFriendly(!onlyPetFriendly)}
-        >
-          <CatalogIcon name="paw" />Можна з тваринами
+      <div className="catalog-filter-toolbar">
+        <button type="button" aria-pressed={filters.onlyOpen} className={filters.onlyOpen ? 'chip active' : 'chip'} onClick={() => setFilters((old) => ({ ...old, onlyOpen: !old.onlyOpen }))}><CatalogIcon name="clock" />Відкрито зараз</button>
+        <button type="button" className={filterCount ? 'chip active' : 'chip'} aria-haspopup="dialog" aria-expanded={filtersOpen} onClick={() => setFiltersOpen(true)}>
+          <svg className="catalog-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 7h16M4 17h16M8 4v6M16 14v6" /></svg>Фільтри{filterCount ? ` · ${filterCount}` : ''}
         </button>
       </div>
+      {filterChips.length > 0 && <div className="selected-filters" aria-label="Обрані фільтри">{filterChips.map((chip) => <button type="button" key={chip.key} aria-label={`Прибрати фільтр: ${chip.label}`} onClick={chip.remove}>{chip.label}<span aria-hidden="true">×</span></button>)}</div>}
+      <label className="catalog-sort"><span>Сортування</span><select aria-label="Сортування закладів" value={me ? 'near' : 'default'} disabled={locating} onChange={(e) => { if ((e.target.value === 'near') !== Boolean(me)) toggleNearMe() }}><option value="default">За замовчуванням</option><option value="near">Найближчі</option></select>{locating && <span role="status">Шукаємо вас…</span>}</label>
+      {filtersOpen && <FilterSheet value={filters} districts={districtOptions} cuisines={cuisineOptions}
+        unavailable={loading || loadError || (onlyFavorites && (favorites.loading || Boolean(favorites.error) || !favorites.enabled))}
+        resultCount={(draft) => filterPlaces(places, draft, filterContext, isOpenNow).length}
+        onClose={() => setFiltersOpen(false)} onApply={(draft) => { setFilters(draft); setFiltersOpen(false); setPicked(null) }} />}
 
       {!loading && !loadError && (
         <div className="results-bar">
