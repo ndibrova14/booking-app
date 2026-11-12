@@ -101,3 +101,6 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .badge.st-rejected, .badge.st-cancelled { background: rgba(128, 128, 128, 0.18); color: var(--hint); }
 .card a { color: var(--accent); text-decoration: none; }
 .menu-btn:disabled, .book:disabled { opacity: 0.6; }
+.modal { position: relative; max-height: 90dvh; overflow-y: auto; padding-bottom: max(28px, env(safe-area-inset-bottom)); }
+.modal h2 { padding-right: 36px; }
+.modal-close { position: absolute; top: 8px; right: 8px; width: 44px; height: 44px; border: 0; border-radius: 12px; background: transparent; color: var(--text); font-size: 22px; cursor: pointer; }

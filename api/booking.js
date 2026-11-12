@@ -2,7 +2,7 @@ import { db, tg, verifyInitData } from './_lib.js'
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
-const PHONE_RE = /^[+\d\s()-]{5,20}$/
+const PHONE_RE = /^\+[1-9]\d{7,14}$/
 
 function kyivDate(offsetDays = 0) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv' }).format(
@@ -28,12 +28,22 @@ export default async function handler(req, res) {
   const pid = Number(placeId)
   const g = Number(guests)
   const cleanName = String(name || '').trim()
-  const cleanPhone = String(phone || '').trim()
+  const rawPhone = String(phone || '').trim()
+  const digits = rawPhone.replace(/[\s()-]/g, '')
+  const cleanPhone = /^0\d{9}$/.test(digits) ? `+38${digits}` : digits
+  const parsedDate = new Date(`${date}T12:00:00Z`)
+  const nowKyiv = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).format(new Date())
 
   if (
-    !Number.isInteger(pid) ||
+    !Number.isInteger(pid) || pid < 1 ||
     !DATE_RE.test(String(date)) ||
     !TIME_RE.test(String(time)) ||
+    !Number.isFinite(parsedDate.getTime()) ||
+    parsedDate.toISOString().slice(0, 10) !== date ||
+    (date === kyivDate(0) && time <= nowKyiv) ||
+    !/^[+\d\s()-]+$/.test(rawPhone) ||
     !Number.isInteger(g) || g < 1 || g > 20 ||
     cleanName.length < 1 || cleanName.length > 80 ||
     !PHONE_RE.test(cleanPhone) ||

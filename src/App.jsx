@@ -254,7 +254,7 @@ function App() {
     (p) =>
       (category === 'Усі' || p.category === category) &&
       (!onlyOpen || isOpenNow(p.hours) === true) &&
-      p.name.toLowerCase().includes(query.toLowerCase())
+      p.name.toLowerCase().includes(query.trim().toLowerCase())
   )
 
   const visible = me
@@ -300,7 +300,7 @@ function App() {
         }),
       })
       if (r.status === 400) {
-        setError('Перевірте дані: телефон (від 5 символів), дату, час і кількість людей.')
+        setError('Перевірте дані: майбутню дату й час, кількість гостей і телефон у форматі +380XXXXXXXXX.')
         setSending(false)
         return
       }
@@ -405,15 +405,18 @@ function App() {
 
       {selected && (
         <div className="overlay" onClick={closeModal}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal" role="dialog" aria-modal="true" aria-label={selected.name} onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="modal-close" onClick={closeModal} aria-label="Закрити форму">✕</button>
             <h2>{selected.name}</h2>
             {sent ? (
               <>
-                <p>Заявку надіслано! Заклад підтвердить бронь.</p>
+                <p>Заявку надіслано. Очікуйте відповідь закладу в Telegram — бронювання ще не підтверджене.</p>
                 <button className="book" onClick={closeModal}>Закрити</button>
               </>
             ) : (
               <form onSubmit={handleSubmit}>
+                <p className="hint left">Це заявка: бронювання діє лише після підтвердження закладом.</p>
+                {!window.Telegram?.WebApp?.initData && <p role="status">Для надсилання відкрийте «Поїмо» через Telegram.</p>}
                 <label className="field">
                   <span>Дата</span>
                   <input name="date" type="date" min={today} required />
@@ -436,14 +439,14 @@ function App() {
                 </label>
                 <label className="field">
                   <span>Ім'я</span>
-                  <input name="name" placeholder="Як до вас звертатися" required />
+                  <input name="name" maxLength={80} autoComplete="name" placeholder="Як до вас звертатися" required />
                 </label>
                 <label className="field">
                   <span>Телефон</span>
-                  <input name="phone" type="tel" placeholder="+380" required />
+                  <input name="phone" type="tel" autoComplete="tel" maxLength={24} placeholder="+380XXXXXXXXX" required />
                 </label>
                 {error && <p>{error}</p>}
-                <button className="book" type="submit" disabled={sending}>
+                <button className="book" type="submit" disabled={sending || !window.Telegram?.WebApp?.initData}>
                   {sending ? 'Надсилаємо…' : 'Надіслати заявку'}
                 </button>
               </form>

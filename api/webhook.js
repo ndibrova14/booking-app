@@ -6,7 +6,7 @@ const APP_URL = 'https://booking-app-pearl-iota.vercel.app/'
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
 
-  if (req.headers['x-telegram-bot-api-secret-token'] !== process.env.WEBHOOK_SECRET) {
+  if (!process.env.WEBHOOK_SECRET || req.headers['x-telegram-bot-api-secret-token'] !== process.env.WEBHOOK_SECRET) {
     return res.status(401).end()
   }
 
@@ -74,10 +74,16 @@ export default async function handler(req, res) {
     }
 
     const confirmed = action === 'ok'
-    await db(`bookings?id=eq.${id}`, {
+    const updated = await db(`bookings?id=eq.${id}&status=eq.new`, {
       method: 'PATCH',
+      headers: { Prefer: 'return=representation' },
       body: JSON.stringify({ status: confirmed ? 'confirmed' : 'rejected' }),
     })
+
+    if (!updated.length) {
+      await answer('Цю заявку вже оброблено')
+      return res.status(200).end()
+    }
 
     await tg('editMessageText', {
       chat_id: cb.message.chat.id,
