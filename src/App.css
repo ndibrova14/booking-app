@@ -158,3 +158,9 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .place-title-row .badge { flex: 0 0 auto; margin-top: 2px; }
 .place-schedule { margin-top: 8px; }
 .place-card .actions { margin-top: 12px; }
+
+.catalog-icon { width: 18px; height: 18px; flex: none; }
+.chips .chip { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.quick-filters .chip:last-child { flex-basis: 100%; }
+.pet-friendly-label { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; color: var(--hint); font-size: 12px; line-height: 1.4; }
+.pet-friendly-label .catalog-icon { width: 16px; height: 16px; }

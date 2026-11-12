@@ -128,6 +128,18 @@ function openMenu(url) {
   else window.open(url, '_blank', 'noopener')
 }
 
+function CatalogIcon({ name }) {
+  const shapes = {
+    'Усі': <><rect x="3" y="3" width="7" height="7" rx="2" /><rect x="14" y="3" width="7" height="7" rx="2" /><rect x="3" y="14" width="7" height="7" rx="2" /><rect x="14" y="14" width="7" height="7" rx="2" /></>,
+    'Ресторани': <><path d="M4 3v5a3 3 0 0 0 6 0V3M7 3v18M20 21V3c-4 2-5 6-5 10h5" /></>,
+    'Кафе': <><path d="M4 9h12v7a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4ZM16 10h2a3 3 0 0 1 0 6h-2M7 3v3M12 3v3" /></>,
+    'Кальян-бари': <><path d="M8 3h8M10 3v5l-3 9a3 3 0 0 0 3 4h4a3 3 0 0 0 3-4l-3-9V3M9 14h6M17 17h2a2 2 0 0 0 2-2V9M19 9h3" /></>,
+    clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
+    paw: <><ellipse cx="5" cy="8" rx="2" ry="3" /><ellipse cx="10" cy="5" rx="2" ry="3" /><ellipse cx="16" cy="5" rx="2" ry="3" /><ellipse cx="21" cy="9" rx="2" ry="3" /><path d="M6 18c0-3 3-7 6-7s7 4 7 7c0 4-4 2-6 2s-7 2-7-2Z" /></>,
+  }
+  return <svg className="catalog-icon" viewBox="0 0 26 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{shapes[name]}</svg>
+}
+
 function LocationIcon() {
   return <svg className="location-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></svg>
 }
@@ -168,6 +180,7 @@ function PlaceCard({ place, onBook }) {
         <div className="place-schedule">
           <span className="place-hours">{place.hours || 'Графік уточнюється'}</span>
         </div>
+        {place.pet_friendly === true && <p className="pet-friendly-label"><CatalogIcon name="paw" />Можна з тваринами</p>}
         <div className="actions">
           {hasMenu && (
             <button className="menu-btn" onClick={() => openMenu(place.menu_url)}>
@@ -191,6 +204,7 @@ function App() {
   const [view, setView] = useState('list')
   const [category, setCategory] = useState('Усі')
   const [onlyOpen, setOnlyOpen] = useState(false)
+  const [onlyPetFriendly, setOnlyPetFriendly] = useState(false)
   const [me, setMe] = useState(null)
   const [locating, setLocating] = useState(false)
   const locationRequest = useRef(0)
@@ -264,11 +278,12 @@ function App() {
     if (request === locationRequest.current) setLocating(false)
   }
 
-  const hasFilters = category !== 'Усі' || onlyOpen || Boolean(me) || locating || Boolean(query.trim()) || Boolean(locError)
+  const hasFilters = category !== 'Усі' || onlyOpen || onlyPetFriendly || Boolean(me) || locating || Boolean(query.trim()) || Boolean(locError)
   function resetFilters() {
     locationRequest.current++
     setCategory('Усі')
     setOnlyOpen(false)
+    setOnlyPetFriendly(false)
     setMe(null)
     setLocating(false)
     setLocError('')
@@ -280,6 +295,7 @@ function App() {
     (p) =>
       (category === 'Усі' || p.category === category) &&
       (!onlyOpen || isOpenNow(p.hours) === true) &&
+      (!onlyPetFriendly || p.pet_friendly === true) &&
       p.name.toLowerCase().includes(query.trim().toLowerCase())
   )
 
@@ -393,7 +409,7 @@ function App() {
             className={c === category ? 'chip active' : 'chip'}
             onClick={() => setCategory(c)}
           >
-            {c}
+            <CatalogIcon name={c} />{c}
           </button>
         ))}
       </div>
@@ -403,7 +419,7 @@ function App() {
           className={onlyOpen ? 'chip active' : 'chip'}
           onClick={() => setOnlyOpen(!onlyOpen)}
         >
-          Відкрито зараз
+          <CatalogIcon name="clock" />Відкрито зараз
         </button>
         <button
           aria-pressed={Boolean(me)}
@@ -412,6 +428,13 @@ function App() {
           disabled={locating}
         >
           <LocationIcon />{locating ? 'Шукаємо вас…' : 'Поруч зі мною'}
+        </button>
+        <button
+          aria-pressed={onlyPetFriendly}
+          className={onlyPetFriendly ? 'chip active' : 'chip'}
+          onClick={() => setOnlyPetFriendly(!onlyPetFriendly)}
+        >
+          <CatalogIcon name="paw" />Можна з тваринами
         </button>
       </div>
 
