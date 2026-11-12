@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import { coordinates, markerSvg } from './mapHelpers.js'
 
 function icon(category, selected) {
-  return L.divIcon({ className: `venue-marker${selected ? ' selected' : ''}`, html: markerSvg(category), iconSize: [44, 44], iconAnchor: [22, 22] })
+  return L.divIcon({ className: `venue-marker${selected ? ' selected' : ''}`, html: `<span class="venue-marker-symbol">${markerSvg(category)}</span>`, iconSize: [44, 44], iconAnchor: [22, 22] })
 }
 export default function InteractiveMap({ places, me, selectedId, onPick, onLocate, locating, focusRequest, children }) {
   const box = useRef(null)
