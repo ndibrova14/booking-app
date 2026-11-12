@@ -66,7 +66,7 @@ export default async function handler(req, res) {
         {
           method: 'PATCH',
           headers: { Prefer: 'return=representation' },
-          body: JSON.stringify({ status }),
+          body: JSON.stringify({ status, status_actor_id: userId, status_source: 'restaurant' }),
         }
       )
       if (!rows.length) return res.status(409).json({ ok: false })

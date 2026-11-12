@@ -77,7 +77,7 @@ export default async function handler(req, res) {
     const updated = await db(`bookings?id=eq.${id}&status=eq.new`, {
       method: 'PATCH',
       headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({ status: confirmed ? 'confirmed' : 'rejected' }),
+      body: JSON.stringify({ status: confirmed ? 'confirmed' : 'rejected', status_actor_id: cb.from.id, status_source: 'restaurant' }),
     })
 
     if (!updated.length) {

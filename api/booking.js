@@ -124,6 +124,9 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
       body: JSON.stringify({
+        is_test: String(userId) === String(process.env.ADMIN_CHAT_ID),
+        status_actor_id: userId,
+        status_source: 'guest',
         request_id: requestKey,
         notification_status: 'pending',
         reminder_enabled: reminderEnabled,

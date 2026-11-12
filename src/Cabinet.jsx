@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import PlaceEditor from './PlaceEditor.jsx'
+import Statistics from './Statistics.jsx'
 
 const TABS = [
   { id: 'new', label: 'Нові' },
@@ -85,13 +86,14 @@ export default function Cabinet({ onBack, onPlaceSaved }) {
 
   const newCount = bookings.filter((b) => b.status === 'new').length
 
+  if (section === 'stats') return <Statistics onBack={() => setSection('bookings')} onExit={onBack} />
   if (section === 'place') return <PlaceEditor onBack={() => setSection('bookings')} onExit={onBack} onSaved={onPlaceSaved} />
 
   return (
     <div className="app">
       <button className="back" onClick={onBack}>← До каталогу</button>
 <h1>Кабінет</h1>
-      <div className="collection-tabs"><button className="active" aria-pressed="true">Бронювання</button><button aria-pressed="false" onClick={() => setSection('place')}>Мій заклад</button></div>
+      <div className="collection-tabs cabinet-sections"><button className="active" aria-pressed="true">Бронювання</button><button aria-pressed="false" onClick={() => setSection('place')}>Мій заклад</button><button aria-pressed="false" onClick={() => setSection('stats')}>Статистика</button></div>
       {places.length === 1 && <p className="hint left">{places[0].name}</p>}
 
       <div className="tabs">
