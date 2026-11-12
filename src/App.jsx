@@ -312,6 +312,12 @@ function App() {
           initData,
         }),
       })
+      if (r.status === 422) {
+        const result = await r.json()
+        setError(result.code === 'OUTSIDE_HOURS' || result.code === 'HOURS_UNAVAILABLE'
+          ? result.message : 'Перевірте години роботи закладу.')
+        return
+      }
       if (r.status === 400) {
         setError('Перевірте дані: майбутню дату й час, кількість гостей і телефон у форматі +380XXXXXXXXX.')
         return
@@ -439,6 +445,7 @@ function App() {
                 </label>
                 <label className="field">
                   <span>Час</span>
+                  <small>Години роботи: {selected.hours || "потребують уточнення"}. Після опівночі обирайте дату фактичного приходу.</small>
                   <input name="time" type="time" required />
                 </label>
                 <label className="field">

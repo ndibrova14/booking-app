@@ -5,6 +5,22 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
 const PHONE_RE = /^\+[1-9]\d{7,14}$/
 
+// Only the single daily interval stored in places.hours is supported.
+// null means the schedule needs clarification; equal endpoints are ambiguous.
+export function isBookingTimeOpen(hours, time) {
+  if (typeof hours !== 'string' || !TIME_RE.test(time)) return null
+  const match = /^\s*([01]?\d|2[0-3]):([0-5]\d)\s*[–—-]\s*([01]?\d|2[0-3]):([0-5]\d)\s*$/.exec(hours)
+  if (!match) return null
+  const open = Number(match[1]) * 60 + Number(match[2])
+  const close = Number(match[3]) * 60 + Number(match[4])
+  const [h, m] = time.split(':').map(Number)
+  const requested = h * 60 + m
+  if (open === close) return null
+  return open < close
+    ? requested >= open && requested < close
+    : requested >= open || requested < close
+}
+
 function kyivDate(offsetDays = 0) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv' }).format(
     new Date(Date.now() + offsetDays * 86400000)
@@ -83,10 +99,20 @@ export default async function handler(req, res) {
     }
 
     const places = await db(
-      `places?id=eq.${pid}&is_active=eq.true&select=id,name,admin_chat_id`
+      `places?id=eq.${pid}&is_active=eq.true&select=id,name,admin_chat_id,hours`
     )
     const place = places?.[0]
     if (!place) return res.status(404).json({ ok: false })
+
+    const openAtRequestedTime = isBookingTimeOpen(place.hours, time)
+    if (openAtRequestedTime === null) {
+      return res.status(422).json({ ok: false, code: 'HOURS_UNAVAILABLE',
+        message: 'Графік закладу потребує уточнення. Зв’яжіться із закладом перед бронюванням.' })
+    }
+    if (!openAtRequestedTime) {
+      return res.status(422).json({ ok: false, code: 'OUTSIDE_HOURS',
+        message: `На цей час заклад зачинений. Години роботи: ${place.hours}. Оберіть інший час.` })
+    }
 
     const tgUser = `${user.first_name || ''}${user.username ? ' @' + user.username : ''}`.trim()
 
