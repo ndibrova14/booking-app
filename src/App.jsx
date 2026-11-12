@@ -219,7 +219,6 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [view, setView] = useState('list')
-  const [category, setCategory] = useState('Усі')
   const [filters, setFilters] = useState(emptyFilters)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [me, setMe] = useState(null)
@@ -297,18 +296,19 @@ function App() {
   }
 
   const filterCount = countFilters(filters)
-  const hasFilters = category !== 'Усі' || filterCount > 0 || Boolean(query.trim())
+  const hasFilters = filterCount > 0 || Boolean(query.trim())
   function resetFilters() {
-    setCategory('Усі')
     setFilters(emptyFilters())
     setQuery('')
     setPicked(null)
   }
   const districtOptions = filterOptions(places, 'district')
   const cuisineOptions = filterOptions(places, 'cuisine')
-  const filterContext = { category, query, onlyFavorites, favoriteIds: favorites.ids }
+  const filterContext = { query, onlyFavorites, favoriteIds: favorites.ids }
   const filtered = filterPlaces(places, filters, filterContext, isOpenNow)
   const filterChips = [
+    ...(filters.category !== 'Усі' ? [{ key: 'category', label: filters.category,
+      remove: () => setFilters((old) => ({ ...old, category: 'Усі' })) }] : []),
     ...filters.districts.map((key) => ({ key: `district-${key}`, label: districtOptions.find(([id]) => id === key)?.[1] || key,
       remove: () => setFilters((old) => ({ ...old, districts: old.districts.filter((id) => id !== key) })) })),
     ...filters.cuisines.map((key) => ({ key: `cuisine-${key}`, label: cuisineOptions.find(([id]) => id === key)?.[1] || key,
@@ -431,18 +431,6 @@ function App() {
         onChange={(e) => setQuery(e.target.value)}
       />
 
-      <div className="chips" role="group" aria-label="Категорії закладів">
-        {CATEGORIES.map((c) => (
-          <button
-            aria-pressed={c === category}
-            key={c}
-            className={c === category ? 'chip active' : 'chip'}
-            onClick={() => setCategory(c)}
-          >
-            <CatalogIcon name={c} />{c}
-          </button>
-        ))}
-      </div>
       <div className="catalog-filter-toolbar">
         <button type="button" aria-pressed={filters.onlyOpen} className={filters.onlyOpen ? 'chip active' : 'chip'} onClick={() => setFilters((old) => ({ ...old, onlyOpen: !old.onlyOpen }))}><CatalogIcon name="clock" />Відкрито зараз</button>
         <button type="button" className={filterCount ? 'chip active' : 'chip'} aria-haspopup="dialog" aria-expanded={filtersOpen} onClick={() => setFiltersOpen(true)}>
@@ -451,7 +439,7 @@ function App() {
       </div>
       {filterChips.length > 0 && <div className="selected-filters" aria-label="Обрані фільтри">{filterChips.map((chip) => <button type="button" key={chip.key} aria-label={`Прибрати фільтр: ${chip.label}`} onClick={chip.remove}>{chip.label}<span aria-hidden="true">×</span></button>)}</div>}
       <label className="catalog-sort"><span>Сортування</span><select aria-label="Сортування закладів" value={me ? 'near' : 'default'} disabled={locating} onChange={(e) => { if ((e.target.value === 'near') !== Boolean(me)) toggleNearMe() }}><option value="default">За замовчуванням</option><option value="near">Найближчі</option></select>{locating && <span role="status">Шукаємо вас…</span>}</label>
-      {filtersOpen && <FilterSheet value={filters} districts={districtOptions} cuisines={cuisineOptions}
+      {filtersOpen && <FilterSheet value={filters} categories={CATEGORIES} renderCategoryIcon={(name) => <CatalogIcon name={name} />} districts={districtOptions} cuisines={cuisineOptions}
         unavailable={loading || loadError || (onlyFavorites && (favorites.loading || Boolean(favorites.error) || !favorites.enabled))}
         resultCount={(draft) => filterPlaces(places, draft, filterContext, isOpenNow).length}
         onClose={() => setFiltersOpen(false)} onApply={(draft) => { setFilters(draft); setFiltersOpen(false); setPicked(null) }} />}

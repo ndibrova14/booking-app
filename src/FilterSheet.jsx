@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { emptyFilters, filterKey } from './catalogFilters.js'
 
-export default function FilterSheet({ value, districts, cuisines, resultCount, unavailable, onApply, onClose }) {
+export default function FilterSheet({ value, categories, renderCategoryIcon, districts, cuisines, resultCount, unavailable, onApply, onClose }) {
   const [draft, setDraft] = useState(() => ({ ...value, districts: [...value.districts], cuisines: [...value.cuisines] }))
   const [districtQuery, setDistrictQuery] = useState('')
   const dialog = useRef(null)
@@ -26,6 +26,9 @@ export default function FilterSheet({ value, districts, cuisines, resultCount, u
     }}>
     <header className="filter-sheet-header"><div><h2 id="filter-sheet-title">Фільтри</h2><p>Знайдіть місце під свій настрій</p></div><button type="button" className="sheet-close" aria-label="Закрити без застосування" onClick={onClose}>✕</button></header>
     <div className="filter-sheet-content">
+      <fieldset><legend>Тип закладу</legend><p className="sheet-help">Оберіть один тип або всі заклади</p>
+        <div className="sheet-options sheet-categories">{categories.map((category) => <button type="button" key={category} aria-pressed={draft.category === category} className={draft.category === category ? 'chosen' : ''} onClick={() => setDraft((old) => ({ ...old, category }))}>{renderCategoryIcon(category)}{category}</button>)}</div>
+      </fieldset>
       <fieldset><legend>Район / місцевість</legend><p className="sheet-help">Можна вибрати кілька</p>
         <input className="search" type="search" aria-label="Пошук району" placeholder="Знайти район…" value={districtQuery} onChange={(e) => setDistrictQuery(e.target.value)} />
         <div className="sheet-options">{visibleDistricts.map(([key, label]) => <button type="button" key={key} aria-pressed={draft.districts.includes(key)} className={draft.districts.includes(key) ? 'chosen' : ''} onClick={() => toggle('districts', key)}>{label}</button>)}</div>

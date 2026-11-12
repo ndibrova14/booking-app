@@ -10,17 +10,18 @@ export function filterOptions(places, field) {
   return [...options].sort((a, b) => a[1].localeCompare(b[1], 'uk'))
 }
 export function emptyFilters() {
-  return { districts: [], cuisines: [], onlyOpen: false, petFriendly: false }
+  return { category: 'Усі', districts: [], cuisines: [], onlyOpen: false, petFriendly: false }
 }
 export function countFilters(filters) {
-  return filters.districts.length + filters.cuisines.length + Number(filters.onlyOpen) + Number(filters.petFriendly)
+  return Number(Boolean(filters.category && filters.category !== 'Усі')) + filters.districts.length + filters.cuisines.length + Number(filters.onlyOpen) + Number(filters.petFriendly)
 }
 export function filterPlaces(places, filters, context, isOpenNow) {
+  const category = filters.category || context.category || 'Усі'
   const query = filterKey(context.query)
   const favoriteIds = new Set(context.favoriteIds.map(String))
   return places.filter((p) =>
     (!context.onlyFavorites || favoriteIds.has(String(p.id))) &&
-    (context.category === 'Усі' || p.category === context.category) &&
+    (category === 'Усі' || p.category === category) &&
     (!filters.onlyOpen || isOpenNow(p.hours) === true) &&
     (!filters.petFriendly || p.pet_friendly === true) &&
     (!filters.districts.length || filters.districts.includes(filterKey(p.district))) &&

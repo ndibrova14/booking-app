@@ -24,7 +24,7 @@ test('opening and pet-friendly both apply and unknown is not true',()=>{
   assert.deepEqual(select({...emptyFilters(),onlyOpen:true,petFriendly:true}),[1,4])
 })
 test('search category favorites and filters share one result',()=>{
-  assert.deepEqual(select({...emptyFilters(),districts:['поділ']},{...context,category:'Ресторани',query:' ROMA ',onlyFavorites:true,favoriteIds:['4']}),[4])
+  assert.deepEqual(select({...emptyFilters(),category:'Ресторани',districts:['поділ']},{...context,query:' ROMA ',onlyFavorites:true,favoriteIds:['4']}),[4])
 })
 test('options normalize case and whitespace without inventing values',()=>{
   assert.equal(filterKey('  ЛІВИЙ   БЕРЕГ '),'лівий берег')
@@ -34,4 +34,13 @@ test('options normalize case and whitespace without inventing values',()=>{
 test('counts selections explicitly and reset clears all sheet groups',()=>{
   assert.equal(countFilters({...emptyFilters(),districts:['поділ','оболонь'],cuisines:['кава'],petFriendly:true,onlyOpen:true}),5)
   assert.equal(countFilters(emptyFilters()),0)
+})
+
+test('category lives in the draft, contributes to counter, and resets with sheet',()=>{
+  const applied=emptyFilters()
+  const draft={...applied,category:'Кафе'}
+  assert.deepEqual(select(draft),[3])
+  assert.equal(countFilters(draft),1)
+  assert.deepEqual(select(applied),[1,2,3,4])
+  assert.equal(emptyFilters().category,'Усі')
 })
