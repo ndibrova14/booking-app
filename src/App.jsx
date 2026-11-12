@@ -184,6 +184,7 @@ function App() {
   const [onlyOpen, setOnlyOpen] = useState(false)
   const [me, setMe] = useState(null)
   const [locating, setLocating] = useState(false)
+  const locationRequest = useRef(0)
   const [locError, setLocError] = useState('')
   const [query, setQuery] = useState('')
   const [picked, setPicked] = useState(null)
@@ -243,13 +244,27 @@ function App() {
       setMe(null)
       return
     }
+    const request = ++locationRequest.current
     setLocating(true)
     try {
-      setMe(await getUserLocation())
+      const location = await getUserLocation()
+      if (request === locationRequest.current) setMe(location)
     } catch {
-      setLocError('Не вдалося визначити місцезнаходження. Дозвольте доступ до геолокації для Telegram в налаштуваннях телефона.')
+      if (request === locationRequest.current) setLocError('Не вдалося визначити місцезнаходження. Дозвольте доступ до геолокації для Telegram в налаштуваннях телефона.')
     }
+    if (request === locationRequest.current) setLocating(false)
+  }
+
+  const hasFilters = category !== 'Усі' || onlyOpen || Boolean(me) || locating || Boolean(query.trim()) || Boolean(locError)
+  function resetFilters() {
+    locationRequest.current++
+    setCategory('Усі')
+    setOnlyOpen(false)
+    setMe(null)
     setLocating(false)
+    setLocError('')
+    setQuery('')
+    setPicked(null)
   }
 
   const filtered = places.filter(
@@ -355,14 +370,16 @@ function App() {
 
       <input
         className="search"
+        aria-label="Пошук закладу за назвою"
         placeholder="Пошук за назвою"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
 
-      <div className="chips">
+      <div className="chips" role="group" aria-label="Категорії закладів">
         {CATEGORIES.map((c) => (
           <button
+            aria-pressed={c === category}
             key={c}
             className={c === category ? 'chip active' : 'chip'}
             onClick={() => setCategory(c)}
@@ -370,13 +387,17 @@ function App() {
             {c}
           </button>
         ))}
+      </div>
+      <div className="quick-filters" role="group" aria-label="Додаткові фільтри">
         <button
+          aria-pressed={onlyOpen}
           className={onlyOpen ? 'chip active' : 'chip'}
           onClick={() => setOnlyOpen(!onlyOpen)}
         >
           Відкрито зараз
         </button>
         <button
+          aria-pressed={Boolean(me)}
           className={me ? 'chip active' : 'chip'}
           onClick={toggleNearMe}
           disabled={locating}
@@ -384,6 +405,14 @@ function App() {
           {locating ? 'Шукаємо вас…' : '📍 Поруч зі мною'}
         </button>
       </div>
+
+      {!loading && !loadError && (
+        <div className="results-bar">
+          <p role="status" aria-live="polite">Знайдено закладів: <strong>{visible.length}</strong></p>
+          {hasFilters && <button type="button" className="reset-filters" onClick={resetFilters}>Скинути</button>}
+        </div>
+      )}
+      {me && <p className="hint left">Спочатку найближчі до вас. Відстань — по прямій.</p>}
 
       {locError && <p className="hint">{locError}</p>}
 
@@ -407,7 +436,7 @@ function App() {
 
       {view === 'list' && (
         <>
-          {!loading && !loadError && visible.length === 0 && <p>Нічого не знайдено</p>}
+          {!loading && !loadError && visible.length === 0 && <p>Нічого не знайдено. Змініть пошук або скиньте фільтри.</p>}
           {visible.map((p) => (
             <PlaceCard key={p.id} place={p} onBook={setSelected} />
           ))}
@@ -420,7 +449,7 @@ function App() {
           {pickedVisible ? (
             <PlaceCard place={pickedVisible} onBook={setSelected} />
           ) : (
-            <p className="hint">Натисніть на точку на карті, щоб побачити заклад</p>
+            <p className="hint">{visible.length === 0 ? "Нічого не знайдено. Змініть пошук або скиньте фільтри." : "Натисніть на точку на карті, щоб побачити заклад"}</p>
           )}
         </>
       )}
