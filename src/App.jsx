@@ -378,7 +378,7 @@ function App() {
     }
   }
   if (screen === 'my-bookings') return <MyBookings onBack={() => setScreen('catalog')} />
-  if (screen === 'cabinet') return <Cabinet onBack={() => setScreen('catalog')} />
+  if (screen === 'cabinet') return <Cabinet onBack={() => setScreen('catalog')} onPlaceSaved={(updated) => setPlaces((old) => old.map((p) => p.id === updated.id ? { ...p, ...updated } : p))} />
   
   return (
     <div className={view === 'map' ? 'app map-mode' : 'app'}>

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { averageCheckLabel, galleryPhotos, publicUrl, venueAmenities } from './placeDetails.js'
 import { routeUrl } from './mapHelpers.js'
 
-export default function PlaceDetails({ place, open, favorites, onClose, onBook, openLink, renderHeart }) {
+export default function PlaceDetails({ place, open, favorites, onClose, onBook, openLink, renderHeart, preview = false }) {
   const dialog = useRef(null)
   const [failedPhotos, setFailedPhotos] = useState([])
   const photos = galleryPhotos(place).filter((url) => !failedPhotos.includes(url))
@@ -20,7 +20,7 @@ export default function PlaceDetails({ place, open, favorites, onClose, onBook, 
     return () => { node.close(); document.body.style.overflow = previousOverflow }
   }, [])
   return <dialog ref={dialog} className="place-details" aria-labelledby="place-details-title" onCancel={(e) => { e.preventDefault(); onClose() }}>
-    <header className="place-details-toolbar"><button type="button" onClick={onClose}>← Назад</button><button type="button" className={saved ? 'saved' : ''} aria-label={saved ? 'Прибрати з обраного' : 'Додати в обране'} aria-pressed={saved} disabled={favorites.loading || Boolean(favorites.error) || favorites.busyIds.includes(String(place.id))} onClick={() => favorites.toggle(place.id)}>{renderHeart(saved)}<span>{saved ? 'В обраному' : 'Зберегти'}</span></button></header>
+    <header className="place-details-toolbar"><button type="button" onClick={onClose}>← Назад</button>{!preview && <button type="button" className={saved ? 'saved' : ''} aria-label={saved ? 'Прибрати з обраного' : 'Додати в обране'} aria-pressed={saved} disabled={favorites.loading || Boolean(favorites.error) || favorites.busyIds.includes(String(place.id))} onClick={() => favorites.toggle(place.id)}>{renderHeart(saved)}<span>{saved ? 'В обраному' : 'Зберегти'}</span></button>}</header>
     <div className="place-details-scroll">
       {photos.length > 0 && <section className="venue-gallery" aria-label="Фотографії закладу"><div className="venue-gallery-track">{photos.map((url, index) => <img key={url} src={url} alt={`${place.name} — фото ${index + 1}`} loading={index === 0 ? 'eager' : 'lazy'} onError={() => setFailedPhotos((old) => [...old, url])} />)}</div>{photos.length > 1 && <p>Фото: {photos.length} · гортайте вбік</p>}</section>}
       <div className="place-details-body">
@@ -39,6 +39,6 @@ export default function PlaceDetails({ place, open, favorites, onClose, onBook, 
         <section className="venue-section"><h2>Меню</h2>{menu ? <button type="button" className="menu-btn" onClick={() => openLink(menu)}>Відкрити меню ↗</button> : <p className="venue-help">Меню ще не додано.</p>}</section>
       </div>
     </div>
-    <footer className="place-details-footer"><p>Бронювання діє після підтвердження закладом.</p><button type="button" className="book" onClick={() => onBook(place)}>Забронювати столик</button></footer>
+    <footer className="place-details-footer"><p>{preview ? 'Попередній перегляд. Зміни ще не збережені.' : 'Бронювання діє після підтвердження закладом.'}</p><button type="button" className="book" onClick={() => preview ? onClose() : onBook(place)}>{preview ? 'До редагування' : 'Забронювати столик'}</button></footer>
   </dialog>
 }

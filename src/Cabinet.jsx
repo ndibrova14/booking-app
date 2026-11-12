@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import PlaceEditor from './PlaceEditor.jsx'
 
 const TABS = [
   { id: 'new', label: 'Нові' },
@@ -28,7 +29,8 @@ function todayKyiv() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv' }).format(new Date())
 }
 
-export default function Cabinet({ onBack }) {
+export default function Cabinet({ onBack, onPlaceSaved }) {
+  const [section, setSection] = useState('bookings')
   const [tab, setTab] = useState('new')
   const [places, setPlaces] = useState([])
   const [bookings, setBookings] = useState([])
@@ -49,10 +51,11 @@ export default function Cabinet({ onBack }) {
   }, [])
 
   useEffect(() => {
-    load()
+    if (section !== 'bookings') return
+    const initial = setTimeout(load, 0)
     const timer = setInterval(load, 30000)
-    return () => clearInterval(timer)
-  }, [load])
+    return () => { clearTimeout(initial); clearInterval(timer) }
+  }, [load, section])
 
   async function changeStatus(id, status) {
     setBusyId(id)
@@ -82,10 +85,13 @@ export default function Cabinet({ onBack }) {
 
   const newCount = bookings.filter((b) => b.status === 'new').length
 
+  if (section === 'place') return <PlaceEditor onBack={() => setSection('bookings')} onExit={onBack} onSaved={onPlaceSaved} />
+
   return (
     <div className="app">
       <button className="back" onClick={onBack}>← До каталогу</button>
-      <h1>Кабінет</h1>
+<h1>Кабінет</h1>
+      <div className="collection-tabs"><button className="active" aria-pressed="true">Бронювання</button><button aria-pressed="false" onClick={() => setSection('place')}>Мій заклад</button></div>
       {places.length === 1 && <p className="hint left">{places[0].name}</p>}
 
       <div className="tabs">
