@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
 import './App.css'
 import Cabinet from './Cabinet.jsx'
 import MyBookings from './MyBookings.jsx'
 import useFavorites from './useFavorites.js'
 import FilterSheet from './FilterSheet.jsx'
+import InteractiveMap from './InteractiveMap.jsx'
+import { coordinates, routeUrl } from './mapHelpers.js'
 import { filterOptions, emptyFilters, countFilters, filterPlaces } from './catalogFilters.js'
 
 const CATEGORIES = ['Усі', 'Ресторани', 'Кафе', 'Кальян-бари']
@@ -76,54 +76,6 @@ function getUserLocation() {
       viaBrowser()
     }
   })
-}
-
-function MapView({ places, me, onPick }) {
-  const boxRef = useRef(null)
-  const mapRef = useRef(null)
-  const layerRef = useRef(null)
-
-  useEffect(() => {
-    const map = L.map(boxRef.current).setView([50.4501, 30.5234], 12)
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap',
-    }).addTo(map)
-    layerRef.current = L.layerGroup().addTo(map)
-    mapRef.current = map
-    return () => map.remove()
-  }, [])
-
-  useEffect(() => {
-    const layer = layerRef.current
-    layer.clearLayers()
-    const icon = L.divIcon({ className: 'pin', iconSize: [20, 20] })
-    const withCoords = places.filter((p) => p.lat != null && p.lng != null)
-
-    withCoords.forEach((p) => {
-      L.marker([p.lat, p.lng], { icon })
-        .on('click', () => onPick(p))
-        .addTo(layer)
-    })
-
-    if (me) {
-      L.marker([me.lat, me.lng], {
-        icon: L.divIcon({ className: 'pin me', iconSize: [20, 20] }),
-        interactive: false,
-        zIndexOffset: 1000,
-      }).addTo(layer)
-    }
-
-    // З геолокацією показуємо вас і чотири найближчі заклади (список уже відсортований)
-    const focus = me ? withCoords.slice(0, 4) : withCoords
-    const points = focus.map((p) => [p.lat, p.lng])
-    if (me) points.push([me.lat, me.lng])
-    if (points.length > 0) {
-      mapRef.current.fitBounds(points, { padding: [30, 30], maxZoom: 15 })
-    }
-  }, [places, me, onPick])
-
-  return <div ref={boxRef} className="map" />
 }
 
 function openMenu(url) {
@@ -225,6 +177,7 @@ function App() {
   const [locating, setLocating] = useState(false)
   const locationRequest = useRef(0)
   const [locError, setLocError] = useState('')
+  const [mapFocusRequest, setMapFocusRequest] = useState(0)
   const [query, setQuery] = useState('')
   const [picked, setPicked] = useState(null)
   const [selected, setSelected] = useState(null)
@@ -291,6 +244,21 @@ function App() {
       if (request === locationRequest.current) setMe(location)
     } catch {
       if (request === locationRequest.current) setLocError('Не вдалося визначити місцезнаходження. Дозвольте доступ до геолокації для Telegram в налаштуваннях телефона.')
+    }
+    if (request === locationRequest.current) setLocating(false)
+  }
+
+  async function locateOnMap() {
+    setPicked(null)
+    setLocError('')
+    if (me) { setMapFocusRequest((n) => n + 1); return }
+    const request = ++locationRequest.current
+    setLocating(true)
+    try {
+      const location = await getUserLocation()
+      if (request === locationRequest.current) { setMe(location); setMapFocusRequest((n) => n + 1) }
+    } catch {
+      if (request === locationRequest.current) setLocError('Не вдалося визначити місце. Перевірте дозвіл геолокації для Telegram. Картою можна користуватися без нього.')
     }
     if (request === locationRequest.current) setLocating(false)
   }
@@ -402,7 +370,7 @@ function App() {
   if (screen === 'cabinet') return <Cabinet onBack={() => setScreen('catalog')} />
   
   return (
-    <div className="app">
+    <div className={view === 'map' ? 'app map-mode' : 'app'}>
          <div className="topbar">
         <div className="catalog-title"><p className="city-label">Київ</p><h1>Де поїмо?</h1></div>
         {isAdmin && (
@@ -423,6 +391,7 @@ function App() {
       {onlyFavorites && !favorites.enabled && <p role="status">Відкрийте застосунок через Telegram, щоб бачити своє обране.</p>}
       {onlyFavorites && favorites.enabled && !favorites.loading && !favorites.error && <p className="booking-note favorites-hint">Збережені заклади. Пошук і фільтри також застосовуються до обраного.</p>}
 
+      {view === 'map' && <div className="map-mode-title"><strong>{onlyFavorites ? 'Обране на карті' : 'Заклади на карті'}</strong><span>Знайдено: {visible.length}</span></div>}
       <input
         className="search"
         aria-label="Пошук закладу за назвою"
@@ -482,14 +451,16 @@ function App() {
       )}
 
       {view === 'map' && !loading && !loadError && (
-        <>
-          <MapView places={visible} me={me} onPick={setPicked} />
-          {pickedVisible ? (
-            <PlaceCard place={pickedVisible} onBook={setSelected} favorites={favorites} />
-          ) : (
-            <p className="hint">{visible.length === 0 ? "Нічого не знайдено. Змініть пошук або скиньте фільтри." : "Натисніть на точку на карті, щоб побачити заклад"}</p>
-          )}
-        </>
+        <InteractiveMap places={visible} me={me} selectedId={pickedVisible?.id} onPick={setPicked} onLocate={locateOnMap} locating={locating} focusRequest={mapFocusRequest}>
+          {pickedVisible && <article className="map-place-card" aria-label={`Вибраний заклад: ${pickedVisible.name}`}>
+            <div className="map-place-heading"><h2>{pickedVisible.name}</h2><button type="button" className="favorite-button" aria-label={favorites.ids.includes(String(pickedVisible.id)) ? 'Прибрати з обраного' : 'Додати в обране'} aria-pressed={favorites.ids.includes(String(pickedVisible.id))} disabled={favorites.loading || Boolean(favorites.error) || favorites.busyIds.includes(String(pickedVisible.id))} onClick={() => favorites.toggle(pickedVisible.id)}><HeartIcon filled={favorites.ids.includes(String(pickedVisible.id))} /></button><button type="button" className="map-card-close" aria-label="Закрити картку закладу" onClick={() => setPicked(null)}>✕</button></div>
+            <p>{pickedVisible.cuisine}</p>
+            <p>{pickedVisible.address || pickedVisible.district}{pickedVisible.distance != null ? ` · ${formatDistance(pickedVisible.distance)} по прямій` : ''}</p>
+            <p><span className={isOpenNow(pickedVisible.hours) === true ? 'map-open-status' : ''}>{isOpenNow(pickedVisible.hours) === null ? 'Графік уточнюється' : isOpenNow(pickedVisible.hours) ? 'Відкрито' : 'Зачинено'}</span>{pickedVisible.hours ? ` · ${pickedVisible.hours}` : ''}</p>
+            <div className="map-place-links"><button type="button" onClick={() => { const url = routeUrl(pickedVisible); if (url) openMenu(url) }} disabled={!coordinates(pickedVisible)}>Маршрут ↗</button>{/^https?:\/\//i.test(pickedVisible.menu_url || '') && <button type="button" onClick={() => openMenu(pickedVisible.menu_url)}>Меню ↗</button>}</div>
+            <button type="button" className="book" onClick={() => setSelected(pickedVisible)}>Забронювати</button>
+          </article>}
+        </InteractiveMap>
       )}
 
       {selected && (
