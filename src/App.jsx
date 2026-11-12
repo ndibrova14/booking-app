@@ -6,6 +6,8 @@ import useFavorites from './useFavorites.js'
 import FilterSheet from './FilterSheet.jsx'
 import InteractiveMap from './InteractiveMap.jsx'
 import PlaceDetails from './PlaceDetails.jsx'
+import BookingContactFields from './BookingContactFields.jsx'
+import { telegramContactId, writeContact } from './bookingContact.js'
 import { coordinates, routeUrl } from './mapHelpers.js'
 import { filterOptions, emptyFilters, countFilters, filterPlaces } from './catalogFilters.js'
 
@@ -187,6 +189,7 @@ function App() {
   const [sent, setSent] = useState(false)
   const attemptRef = useRef(null)
   const [delivery, setDelivery] = useState('')
+  const [contactNotice, setContactNotice] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
     const [isAdmin, setIsAdmin] = useState(false)
@@ -305,6 +308,7 @@ function App() {
     if (sending) return
     setSelected(null)
     setSent(false)
+    setContactNotice('')
     setError('')
   }
 
@@ -312,6 +316,7 @@ function App() {
     e.preventDefault()
     if (attemptRef.current?.busy) return
     setSending(true)
+    setContactNotice('')
     setError('')
 
     const f = new FormData(e.target)
@@ -359,6 +364,9 @@ function App() {
         throw new Error('fail')
       } else {
         const result = await r.json()
+        if (f.has('rememberContact') && !writeContact(telegramContactId(initData), { name: f.get('name'), phone: f.get('phone') })) {
+          setContactNotice('Заявку збережено, але запам’ятати контактні дані на цьому пристрої не вдалося.')
+        }
         setDelivery(result.notificationStatus || 'unknown')
         setSent(true)
       }
@@ -475,6 +483,7 @@ function App() {
             {sent ? (
               <>
                 <p>{delivery === 'sent' ? 'Заявку збережено й передано закладу. Очікуйте підтвердження в Telegram.' : 'Заявку збережено, але доставку повідомлення закладу не підтверджено. Не створюйте повторну заявку; зв’яжіться із закладом.'}</p>
+                {contactNotice && <p role="status">{contactNotice}</p>}
                 <button className="book" onClick={closeModal}>Закрити</button>
               </>
             ) : (
@@ -502,14 +511,7 @@ function App() {
                     required
                   />
                 </label>
-                <label className="field">
-                  <span>Ім'я</span>
-                  <input name="name" maxLength={80} autoComplete="name" placeholder="Як до вас звертатися" required />
-                </label>
-                <label className="field">
-                  <span>Телефон</span>
-                  <input name="phone" type="tel" autoComplete="tel" maxLength={24} placeholder="+380XXXXXXXXX" required />
-                </label>
+                <BookingContactFields key={telegramContactId(window.Telegram?.WebApp?.initData || '') || 'anonymous'} userId={telegramContactId(window.Telegram?.WebApp?.initData || '')} disabled={sending} />
                 <label className="reminder-option"><input type="checkbox" checked={reminderEnabled} onChange={(e) => setReminderEnabled(e.target.checked)} /><span>Нагадати в Telegram перед візитом</span></label>
                 <p className="booking-note">Після підтвердження закладом — приблизно за 2 години. Якщо бронюєте пізніше, нагадування надійде за найближчої перевірки.</p>
                 {error && <p>{error}</p>}

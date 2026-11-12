@@ -297,3 +297,7 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .place-details-footer p { margin: 0 0 8px; font-size: 12px; line-height: 1.4; color: var(--hint); }
 .place-details-footer .book { margin-top: 0; min-height: 46px; }
 .place-details button:focus-visible, .place-details-link:focus-visible, .place-name-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.forget-contact { align-self: flex-start; min-height: 44px; padding: 8px 0; border: 0; background: none; color: var(--accent); font-size: 13px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.forget-contact:disabled { opacity: .55; cursor: default; }
+.forget-contact:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
