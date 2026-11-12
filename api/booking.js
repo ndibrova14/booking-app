@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ ok: false })
   }
 
-  const { placeId, date, time, guests, name, phone, initData, requestId } = req.body || {}
+  const { placeId, date, time, guests, name, phone, initData, requestId, reminderEnabled = false } = req.body || {}
 
   // 1. Запит має прийти з Mini App всередині Telegram
   const user = verifyInitData(initData)
@@ -40,6 +40,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ ok: false })
   }
   const userId = Number(user.id)
+  if (typeof reminderEnabled !== 'boolean') return res.status(400).json({ ok: false })
 
   // 2. Перевірка введених даних
   const pid = Number(placeId)
@@ -77,7 +78,8 @@ export default async function handler(req, res) {
   const replyExisting = (booking) => {
     if (Number(booking.place_id) !== pid || booking.booking_date !== date ||
         String(booking.booking_time).slice(0, 5) !== time || booking.guests !== g ||
-        booking.client_name !== cleanName || booking.client_phone !== cleanPhone) {
+        booking.client_name !== cleanName || booking.client_phone !== cleanPhone ||
+        Boolean(booking.reminder_enabled) !== reminderEnabled) {
       return res.status(409).json({ ok: false })
     }
     return res.status(200).json({ ok: true, bookingId: booking.id,
@@ -124,6 +126,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         request_id: requestKey,
         notification_status: 'pending',
+        reminder_enabled: reminderEnabled,
         place_id: place.id,
         place_name: place.name,
         booking_date: date,

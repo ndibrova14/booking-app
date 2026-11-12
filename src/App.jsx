@@ -3,6 +3,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import './App.css'
 import Cabinet from './Cabinet.jsx'
+import MyBookings from './MyBookings.jsx'
 
 const CATEGORIES = ['Усі', 'Ресторани', 'Кафе', 'Кальян-бари']
 
@@ -219,6 +220,7 @@ function App() {
   const [error, setError] = useState('')
     const [isAdmin, setIsAdmin] = useState(false)
   const [screen, setScreen] = useState('catalog')
+  const [reminderEnabled, setReminderEnabled] = useState(true)
 
   const d = new Date()
   const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -329,7 +331,7 @@ function App() {
     const f = new FormData(e.target)
     const initData = window.Telegram?.WebApp?.initData || ''
     const payload = { placeId: selected.id, date: f.get('date'), time: f.get('time'),
-      guests: f.get('guests'), name: f.get('name'), phone: f.get('phone') }
+      guests: f.get('guests'), name: f.get('name'), phone: f.get('phone'), reminderEnabled }
     const signature = JSON.stringify(payload)
     let saved = attemptRef.current
     try { saved = saved || JSON.parse(sessionStorage.getItem('poimo-booking-attempt')) } catch { /* storage unavailable */ }
@@ -342,6 +344,7 @@ function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          reminderEnabled,
           requestId: saved.requestId,
           placeId: selected.id,
           date: f.get('date'),
@@ -380,6 +383,7 @@ function App() {
       setSending(false)
     }
   }
+  if (screen === 'my-bookings') return <MyBookings onBack={() => setScreen('catalog')} />
   if (screen === 'cabinet') return <Cabinet onBack={() => setScreen('catalog')} />
   
   return (
@@ -392,6 +396,8 @@ function App() {
           </button>
         )}
       </div>
+
+      <button className="my-bookings-link" onClick={() => setScreen("my-bookings")}>Мої бронювання <span aria-hidden="true">→</span></button>
 
       <input
         className="search"
@@ -529,6 +535,8 @@ function App() {
                   <span>Телефон</span>
                   <input name="phone" type="tel" autoComplete="tel" maxLength={24} placeholder="+380XXXXXXXXX" required />
                 </label>
+                <label className="reminder-option"><input type="checkbox" checked={reminderEnabled} onChange={(e) => setReminderEnabled(e.target.checked)} /><span>Нагадати в Telegram перед візитом</span></label>
+                <p className="booking-note">Після підтвердження закладом — приблизно за 2 години. Якщо бронюєте пізніше, нагадування надійде за найближчої перевірки.</p>
                 {error && <p>{error}</p>}
                 <button className="book" type="submit" disabled={sending || !window.Telegram?.WebApp?.initData}>
                   {sending ? 'Надсилаємо…' : 'Надіслати заявку'}
