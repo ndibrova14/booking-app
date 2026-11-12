@@ -1,3 +1,15 @@
+
+.collection-tabs { display: flex; gap: 8px; margin: 0 0 12px; }
+.collection-tabs button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--text); font-size: 14px; cursor: pointer; }
+.collection-tabs button.active { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.heart-icon { width: 20px; height: 20px; flex: none; }
+.favorite-button { display: grid; place-items: center; width: 44px; height: 44px; flex: none; padding: 10px; margin-top: -6px; border: 1px solid var(--line); border-radius: 50%; background: var(--card); color: var(--hint); cursor: pointer; }
+.favorite-button.saved { color: var(--accent); border-color: var(--accent); }
+.favorite-button:disabled { opacity: .5; cursor: wait; }
+.favorite-button:focus-visible, .collection-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.favorites-message { margin-bottom: 12px; font-size: 14px; line-height: 1.5; }
+.favorites-hint { margin-bottom: 12px; }
+
 .app { max-width: 520px; margin: 0 auto; padding: 16px 16px 32px; }
 h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3px; }
 

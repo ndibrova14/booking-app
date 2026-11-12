@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import './App.css'
 import Cabinet from './Cabinet.jsx'
 import MyBookings from './MyBookings.jsx'
+import useFavorites from './useFavorites.js'
 
 const CATEGORIES = ['Усі', 'Ресторани', 'Кафе', 'Кальян-бари']
 
@@ -145,7 +146,11 @@ function LocationIcon() {
   return <svg className="location-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></svg>
 }
 
-function PlaceCard({ place, onBook }) {
+function HeartIcon({ filled = false }) {
+  return <svg viewBox="0 0 24 24" className="heart-icon" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" /></svg>
+}
+
+function PlaceCard({ place, onBook, favorites }) {
   const open = isOpenNow(place.hours)
   const statusText = open === null ? '' : open ? 'Відкрито' : 'Зачинено'
   const hasMenu = /^https?:\/\//i.test(place.menu_url || '')
@@ -166,6 +171,13 @@ function PlaceCard({ place, onBook }) {
         <div className="place-heading">
           <div className="place-title-row">
             <h3>{place.name}</h3>
+            <button type="button" className={favorites.ids.includes(String(place.id)) ? 'favorite-button saved' : 'favorite-button'}
+              aria-label={`${favorites.ids.includes(String(place.id)) ? 'Прибрати з обраного' : 'Додати в обране'}: ${place.name}`}
+              aria-pressed={favorites.ids.includes(String(place.id))}
+              disabled={favorites.loading || Boolean(favorites.error) || favorites.busyIds.includes(String(place.id))}
+              onClick={() => favorites.toggle(place.id)}>
+              <HeartIcon filled={favorites.ids.includes(String(place.id))} />
+            </button>
             {open !== null && <span className={open ? 'badge open' : 'badge closed'}>{statusText}</span>}
           </div>
           {place.cuisine && <p className="place-cuisine">{place.cuisine}</p>}
@@ -199,6 +211,8 @@ function PlaceCard({ place, onBook }) {
 
 
 function App() {
+  const favorites = useFavorites()
+  const [onlyFavorites, setOnlyFavorites] = useState(false)
   const [places, setPlaces] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
@@ -295,6 +309,7 @@ function App() {
 
   const filtered = places.filter(
     (p) =>
+      (!onlyFavorites || favorites.ids.includes(String(p.id))) &&
       (category === 'Усі' || p.category === category) &&
       (!onlyOpen || isOpenNow(p.hours) === true) &&
       (!onlyPetFriendly || p.pet_friendly === true) &&
@@ -399,6 +414,15 @@ function App() {
 
       <button className="my-bookings-link" onClick={() => setScreen("my-bookings")}>Мої бронювання <span aria-hidden="true">→</span></button>
 
+      <div className="collection-tabs" role="group" aria-label="Колекція закладів">
+        <button className={!onlyFavorites ? 'active' : ''} aria-pressed={!onlyFavorites} onClick={() => setOnlyFavorites(false)}>Усі заклади</button>
+        <button className={onlyFavorites ? 'active' : ''} aria-pressed={onlyFavorites} onClick={() => setOnlyFavorites(true)}><HeartIcon filled={onlyFavorites} />Обране{!favorites.loading && !favorites.error && favorites.enabled ? ` · ${places.filter((p) => favorites.ids.includes(String(p.id))).length}` : ''}</button>
+      </div>
+      {favorites.loading && <p className="booking-note" role="status">Завантажуємо обране…</p>}
+      {favorites.error && <div className="favorites-message" role="alert"><p>{favorites.error}</p>{favorites.enabled && <button className="menu-btn" disabled={favorites.busyIds.length > 0} onClick={favorites.retry}>Оновити обране</button>}</div>}
+      {onlyFavorites && !favorites.enabled && <p role="status">Відкрийте застосунок через Telegram, щоб бачити своє обране.</p>}
+      {onlyFavorites && favorites.enabled && !favorites.loading && !favorites.error && <p className="booking-note favorites-hint">Збережені заклади. Пошук і фільтри також застосовуються до обраного.</p>}
+
       <input
         className="search"
         aria-label="Пошук закладу за назвою"
@@ -474,9 +498,9 @@ function App() {
 
       {view === 'list' && (
         <>
-          {!loading && !loadError && visible.length === 0 && <p>Нічого не знайдено. Змініть пошук або скиньте фільтри.</p>}
+          {!loading && !loadError && visible.length === 0 && <p>{onlyFavorites && (favorites.loading || favorites.error || !favorites.enabled) ? '' : onlyFavorites && favorites.ids.length === 0 ? 'В обраному ще немає закладів. Натисніть сердечко на картці в каталозі.' : 'Нічого не знайдено. Змініть пошук або скиньте фільтри.'}</p>}
           {visible.map((p) => (
-            <PlaceCard key={p.id} place={p} onBook={setSelected} />
+            <PlaceCard key={p.id} place={p} onBook={setSelected} favorites={favorites} />
           ))}
         </>
       )}
@@ -485,7 +509,7 @@ function App() {
         <>
           <MapView places={visible} me={me} onPick={setPicked} />
           {pickedVisible ? (
-            <PlaceCard place={pickedVisible} onBook={setSelected} />
+            <PlaceCard place={pickedVisible} onBook={setSelected} favorites={favorites} />
           ) : (
             <p className="hint">{visible.length === 0 ? "Нічого не знайдено. Змініть пошук або скиньте фільтри." : "Натисніть на точку на карті, щоб побачити заклад"}</p>
           )}
