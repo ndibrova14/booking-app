@@ -9,7 +9,7 @@ import PlaceDetails from './PlaceDetails.jsx'
 import BookingContactFields from './BookingContactFields.jsx'
 import { telegramContactId, writeContact } from './bookingContact.js'
 import { coordinates, routeUrl } from './mapHelpers.js'
-import { filterOptions, emptyFilters, countFilters, filterPlaces } from './catalogFilters.js'
+import { filterOptions, emptyFilters, countFilters, filterPlaces, AMENITY_FILTERS } from './catalogFilters.js'
 
 const CATEGORIES = ['Усі', 'Ресторани', 'Кафе', 'Кальян-бари']
 
@@ -287,7 +287,7 @@ function App() {
       remove: () => setFilters((old) => ({ ...old, districts: old.districts.filter((id) => id !== key) })) })),
     ...filters.cuisines.map((key) => ({ key: `cuisine-${key}`, label: cuisineOptions.find(([id]) => id === key)?.[1] || key,
       remove: () => setFilters((old) => ({ ...old, cuisines: old.cuisines.filter((id) => id !== key) })) })),
-    ...(filters.petFriendly ? [{ key: 'pets', label: 'Можна з тваринами', remove: () => setFilters((old) => ({ ...old, petFriendly: false })) }] : []),
+    ...AMENITY_FILTERS.filter(({ key }) => filters[key]).map(({ key, label }) => ({ key: `amenity-${key}`, label, remove: () => setFilters((old) => ({ ...old, [key]: false })) })),
   ]
 
   const visible = me

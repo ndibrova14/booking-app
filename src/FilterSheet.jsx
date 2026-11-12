@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { emptyFilters, filterKey } from './catalogFilters.js'
+import { emptyFilters, filterKey, AMENITY_FILTERS } from './catalogFilters.js'
 
 export default function FilterSheet({ value, categories, renderCategoryIcon, districts, cuisines, resultCount, unavailable, onApply, onClose }) {
   const [draft, setDraft] = useState(() => ({ ...value, districts: [...value.districts], cuisines: [...value.cuisines] }))
@@ -35,7 +35,7 @@ export default function FilterSheet({ value, categories, renderCategoryIcon, dis
         {!visibleDistricts.length && <p className="sheet-help">{districts.length ? 'Не знайдено. Спробуйте іншу назву.' : 'Райони ще не вказані.'}</p>}
       </fieldset>
       <fieldset><legend>Кухня</legend><p className="sheet-help">Можна вибрати кілька</p><div className="sheet-options">{cuisines.map(([key, label]) => <button type="button" key={key} aria-pressed={draft.cuisines.includes(key)} className={draft.cuisines.includes(key) ? 'chosen' : ''} onClick={() => toggle('cuisines', key)}>{label}</button>)}</div>{!cuisines.length && <p className="sheet-help">Кухні ще не вказані.</p>}</fieldset>
-      <fieldset><legend>Особливості</legend><label className="sheet-check"><span>Можна з тваринами</span><input type="checkbox" checked={draft.petFriendly} onChange={(e) => setDraft((old) => ({ ...old, petFriendly: e.target.checked }))} /></label></fieldset>
+      <fieldset><legend>Зручності</legend><p className="sheet-help">Заклад має відповідати всім обраним умовам. Показуємо лише підтверджені зручності.</p>{AMENITY_FILTERS.map(({ key, label }) => <label className="sheet-check" key={key}><span>{label}</span><input type="checkbox" checked={Boolean(draft[key])} onChange={(e) => setDraft((old) => ({ ...old, [key]: e.target.checked }))} /></label>)}</fieldset>
       <fieldset><legend>Графік</legend><label className="sheet-check"><span>Відкрито зараз</span><input type="checkbox" checked={draft.onlyOpen} onChange={(e) => setDraft((old) => ({ ...old, onlyOpen: e.target.checked }))} /></label></fieldset>
       <p className="sheet-help" role="status" aria-live="polite">{unavailable ? 'Зачекайте завантаження каталогу.' : count === 0 ? 'За цими умовами немає закладів. Приберіть один із фільтрів.' : `Знайдено закладів: ${count}`}</p>
     </div>

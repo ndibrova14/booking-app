@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { emptyFilters, filterKey, filterOptions, filterPlaces, countFilters } from '../src/catalogFilters.js'
+import { emptyFilters, filterKey, filterOptions, filterPlaces, countFilters, AMENITY_FILTERS } from '../src/catalogFilters.js'
 const places = [
   {id:1,name:'Roma',category:'Ресторани',district:'Поділ',cuisine:'Італійська',pet_friendly:true,hours:'open'},
   {id:2,name:'Sakura',category:'Ресторани',district:'Оболонь',cuisine:'Японська',pet_friendly:null,hours:'open'},
@@ -43,4 +43,31 @@ test('category lives in the draft, contributes to counter, and resets with sheet
   assert.equal(countFilters(draft),1)
   assert.deepEqual(select(applied),[1,2,3,4])
   assert.equal(emptyFilters().category,'Усі')
+})
+
+test('each amenity only matches the corresponding confirmed database flag',()=>{
+  for (const {key,field} of AMENITY_FILTERS) {
+    const candidates=[true,false,null,undefined,'true'].map((value,index)=>({id:index,name:'Test',category:'Кафе',[field]:value}))
+    const result=filterPlaces(candidates,{...emptyFilters(),[key]:true},context,()=>true)
+    assert.deepEqual(result.map((p)=>p.id),[0],key)
+  }
+})
+test('multiple amenities are ANDed together and work with other filters',()=>{
+  const candidates=[
+    {id:1,name:'Roma',category:'Ресторани',district:'Поділ',cuisine:'Італійська',pet_friendly:true,has_terrace:true,kids_friendly:true,accessible_entrance:true},
+    {id:2,name:'Roma 2',category:'Ресторани',district:'Поділ',cuisine:'Італійська',pet_friendly:true,has_terrace:true,kids_friendly:true,accessible_entrance:null},
+    {id:3,name:'Coffee',category:'Кафе',district:'Поділ',cuisine:'Кава',pet_friendly:true,has_terrace:true,kids_friendly:false,accessible_entrance:true},
+  ]
+  const filters={...emptyFilters(),terrace:true,kidsFriendly:true}
+  assert.deepEqual(filterPlaces(candidates,filters,context,()=>true).map((p)=>p.id),[1,2])
+  filters.accessibleEntrance=true;filters.petFriendly=true
+  assert.deepEqual(filterPlaces(candidates,filters,context,()=>true).map((p)=>p.id),[1])
+  assert.deepEqual(filterPlaces(candidates,filters,{...context,onlyFavorites:true,favoriteIds:['2']},()=>true),[])
+})
+test('all amenity selections count and are reset independently',()=>{
+  const filters=emptyFilters()
+  for(const {key} of AMENITY_FILTERS)filters[key]=true
+  assert.equal(countFilters(filters),4)
+  assert.equal(countFilters({...filters,terrace:false}),3)
+  for(const {key} of AMENITY_FILTERS)assert.equal(emptyFilters()[key],false)
 })
