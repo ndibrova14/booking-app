@@ -301,3 +301,8 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .forget-contact { align-self: flex-start; min-height: 44px; padding: 8px 0; border: 0; background: none; color: var(--accent); font-size: 13px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .forget-contact:disabled { opacity: .55; cursor: default; }
 .forget-contact:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.waiting-notice { margin-top: 14px; padding: 12px; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 12px; background: var(--bg); font-size: 14px; }
+.waiting-notice strong { font-size: 14px; }
+.waiting-notice p { margin: 8px 0 12px; line-height: 1.5; font-size: 13px; }
+.waiting-notice .menu-btn { min-height: 44px; font-size: 13px; }

@@ -70,7 +70,7 @@ export default function MyBookings({ onBack }) {
         <p>{b.booking_date.split('-').reverse().join('.')} · {String(b.booking_time).slice(0, 5)} · Київ</p>
         <p>Гостей: {b.guests}</p>
         {b.status === 'confirmed' && b.reminder_enabled && b.can_cancel && <p className="booking-note">Нагадування в Telegram увімкнене.</p>}
-        {b.status === 'new' && <p className="booking-note">Це заявка. Дочекайтеся підтвердження закладу.</p>}
+        {b.status === 'new' && (b.waiting_long ? <div className="waiting-notice"><strong>Заклад поки не відповів</strong><p>Минуло понад 15 хвилин. Бронювання ще не підтверджене. Можна зачекати або скасувати заявку й обрати інший заклад.</p><button type="button" className="menu-btn" onClick={onBack}>До каталогу</button></div> : <p className="booking-note">{b.can_cancel ? 'Очікуємо рішення закладу. Це ще не підтверджена бронь. Якщо відповіді не буде понад 15 хвилин, повідомимо в Telegram; перевірка виконується кожні 5 хвилин.' : 'Час цієї непідтвердженої заявки минув.'}</p>)}
         {b.can_cancel && (confirmId === b.id ? <div className="cancel-confirm">
           <p>Скасувати це бронювання?</p>
           <div className="actions"><button className="menu-btn" disabled={busy} onClick={() => setConfirmId(null)}>Залишити</button><button className="book" disabled={busy} onClick={() => cancel(b.id)}>{busy ? 'Скасовуємо…' : 'Так, скасувати'}</button></div>

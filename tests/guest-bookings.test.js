@@ -24,7 +24,7 @@ test('guest cannot read without Telegram authentication', async () => {
 test('guest identity comes from signed Telegram data and personal response is limited', async () => {
   const original = globalThis.fetch
   globalThis.fetch = async (url, options) => {
-    assert.ok(String(url).endsWith('/rpc/poimo_guest_bookings'))
+    assert.ok(String(url).endsWith('/rpc/poimo_guest_bookings_v2'))
     assert.deepEqual(JSON.parse(options.body), { p_user_id:123, p_offset:0 })
     return Response.json(Array.from({length:51}, (_,i)=>({id:i})))
   }

@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   try {
     if (action === 'list') {
       if (!Number.isInteger(offset) || offset < 0 || offset > 10000) return res.status(400).json({ ok: false })
-      const rows = await db('rpc/poimo_guest_bookings', {
+      const rows = await db('rpc/poimo_guest_bookings_v2', {
         method: 'POST', body: JSON.stringify({ p_user_id: userId, p_offset: offset }),
       })
       return res.status(200).json({ ok: true, bookings: rows.slice(0, 50), hasMore: rows.length > 50 })
