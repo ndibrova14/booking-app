@@ -45,10 +45,13 @@ export default function useFavorites() {
     locks.current.add(key)
     setBusyIds([...locks.current])
     const saved = !ids.includes(key)
+    // Update immediately; keep this place locked until its write completes.
+    setIds((old) => saved ? [...new Set([...old, key])] : old.filter((id) => id !== key))
     try {
       await request({ action: 'set', placeId, saved })
-      setIds((old) => saved ? [...new Set([...old, key])] : old.filter((id) => id !== key))
     } catch {
+      // Roll back only this place, preserving concurrent changes to other places.
+      setIds((old) => saved ? old.filter((id) => id !== key) : [...new Set([...old, key])])
       setError('Не вдалося підтвердити зміну обраного. Оновіть обране перед повторною спробою.')
     } finally { locks.current.delete(key); setBusyIds([...locks.current]) }
   }
