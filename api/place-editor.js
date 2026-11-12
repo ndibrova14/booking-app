@@ -1,5 +1,8 @@
 import { db, verifyInitData } from './_lib.js'
+import { validatePhotoChanges } from './_placePhotos.js'
 import { EDITOR_SELECT, validatePlaceEdit } from './_placeEditor.js'
+
+export const config = { maxDuration: 60 }
 
 export default async function handler(req,res) {
   res.setHeader('Cache-Control','no-store')
@@ -22,10 +25,13 @@ export default async function handler(req,res) {
     if(!place) return res.status(403).json({ok:false,message:'Немає доступу до цього закладу.'})
     if(action==='get') return res.status(200).json({ok:true,place})
     if(!Number.isSafeInteger(version) || version<0 || version>=2147483647) return res.status(400).json({ok:false,message:'Оновіть дані закладу перед збереженням.'})
-    const checked=validatePlaceEdit(fields)
+    const {photo_url: _cover,gallery_urls: _gallery,...textFields}=fields || {}
+    const checked=validatePlaceEdit(textFields)
     if(checked.error) return res.status(400).json({ok:false,message:checked.error})
+    const photos=await validatePhotoChanges(fields || {},place)
+    if(photos.error)return res.status(400).json({ok:false,message:photos.error})
     const rows=await db(`${query}&editor_version=eq.${version}`,{
-      method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({...checked.data,editor_version:version+1}),
+      method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({...checked.data,...photos.data,editor_version:version+1}),
     })
     if(!rows.length) return res.status(409).json({ok:false,message:'Інший адміністратор уже змінив інформацію. Завантажте актуальні дані перед повторним редагуванням.'})
     return res.status(200).json({ok:true,place:rows[0]})
