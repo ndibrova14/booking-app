@@ -189,6 +189,8 @@ function App() {
   const [picked, setPicked] = useState(null)
   const [selected, setSelected] = useState(null)
   const [sent, setSent] = useState(false)
+  const attemptRef = useRef(null)
+  const [delivery, setDelivery] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
     const [isAdmin, setIsAdmin] = useState(false)
@@ -272,6 +274,7 @@ function App() {
   const pickedVisible = visible.find((p) => p.id === picked?.id)
 
   function closeModal() {
+    if (sending) return
     setSelected(null)
     setSent(false)
     setError('')
@@ -279,17 +282,27 @@ function App() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (attemptRef.current?.busy) return
     setSending(true)
     setError('')
 
     const f = new FormData(e.target)
     const initData = window.Telegram?.WebApp?.initData || ''
+    const payload = { placeId: selected.id, date: f.get('date'), time: f.get('time'),
+      guests: f.get('guests'), name: f.get('name'), phone: f.get('phone') }
+    const signature = JSON.stringify(payload)
+    let saved = attemptRef.current
+    try { saved = saved || JSON.parse(sessionStorage.getItem('poimo-booking-attempt')) } catch { /* storage unavailable */ }
+    if (!saved || saved.signature !== signature) saved = { signature, requestId: crypto.randomUUID() }
+    attemptRef.current = { ...saved, busy: true }
+    try { sessionStorage.setItem('poimo-booking-attempt', JSON.stringify(saved)) } catch { /* retain in memory */ }
 
     try {
       const r = await fetch('/api/booking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          requestId: saved.requestId,
           placeId: selected.id,
           date: f.get('date'),
           time: f.get('time'),
@@ -301,7 +314,6 @@ function App() {
       })
       if (r.status === 400) {
         setError('Перевірте дані: майбутню дату й час, кількість гостей і телефон у форматі +380XXXXXXXXX.')
-        setSending(false)
         return
       }
       if (r.status === 429) {
@@ -311,12 +323,16 @@ function App() {
       } else if (!r.ok) {
         throw new Error('fail')
       } else {
+        const result = await r.json()
+        setDelivery(result.notificationStatus || 'unknown')
         setSent(true)
       }
     } catch {
       setError('Не вдалося надіслати заявку. Спробуйте ще раз.')
+    } finally {
+      attemptRef.current.busy = false
+      setSending(false)
     }
-    setSending(false)
   }
   if (screen === 'cabinet') return <Cabinet onBack={() => setScreen('catalog')} />
   
@@ -410,7 +426,7 @@ function App() {
             <h2>{selected.name}</h2>
             {sent ? (
               <>
-                <p>Заявку надіслано. Очікуйте відповідь закладу в Telegram — бронювання ще не підтверджене.</p>
+                <p>{delivery === 'sent' ? 'Заявку збережено й передано закладу. Очікуйте підтвердження в Telegram.' : 'Заявку збережено, але доставку повідомлення закладу не підтверджено. Не створюйте повторну заявку; зв’яжіться із закладом.'}</p>
                 <button className="book" onClick={closeModal}>Закрити</button>
               </>
             ) : (

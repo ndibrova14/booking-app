@@ -1,5 +1,6 @@
 import { db, tg, verifyInitData } from './_lib.js'
 
+const REQUEST_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
 const PHONE_RE = /^\+[1-9]\d{7,14}$/
@@ -15,7 +16,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ ok: false })
   }
 
-  const { placeId, date, time, guests, name, phone, initData } = req.body || {}
+  const { placeId, date, time, guests, name, phone, initData, requestId } = req.body || {}
 
   // 1. Запит має прийти з Mini App всередині Telegram
   const user = verifyInitData(initData)
@@ -52,7 +53,26 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok: false })
   }
 
+  const requestKey = requestId || null
+  if (requestKey && !REQUEST_RE.test(requestKey)) {
+    return res.status(400).json({ ok: false })
+  }
+  const lookup = () => db(`bookings?client_tg_id=eq.${userId}&request_id=eq.${requestKey}&select=*`)
+  const replyExisting = (booking) => {
+    if (Number(booking.place_id) !== pid || booking.booking_date !== date ||
+        String(booking.booking_time).slice(0, 5) !== time || booking.guests !== g ||
+        booking.client_name !== cleanName || booking.client_phone !== cleanPhone) {
+      return res.status(409).json({ ok: false })
+    }
+    return res.status(200).json({ ok: true, bookingId: booking.id,
+      notificationStatus: booking.notification_status || 'unknown' })
+  }
+
   try {
+    if (requestKey) {
+      const existing = (await lookup())[0]
+      if (existing) return replyExisting(existing)
+    }
     // 3. Ліміт: не більше 5 заявок на годину від одного користувача
     const since = new Date(Date.now() - 3600000).toISOString()
     const recent = await db(
@@ -70,10 +90,14 @@ export default async function handler(req, res) {
 
     const tgUser = `${user.first_name || ''}${user.username ? ' @' + user.username : ''}`.trim()
 
-    const rows = await db('bookings', {
+    let rows
+    try {
+      rows = await db('bookings', {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
       body: JSON.stringify({
+        request_id: requestKey,
+        notification_status: 'pending',
         place_id: place.id,
         place_name: place.name,
         booking_date: date,
@@ -85,6 +109,14 @@ export default async function handler(req, res) {
         client_tg_name: tgUser || null,
       }),
     })
+    } catch (err) {
+      // A concurrent request may already have inserted this request key.
+      if (requestKey) {
+        const existing = (await lookup())[0]
+        if (existing) return replyExisting(existing)
+      }
+      throw err
+    }
     const booking = rows[0]
 
     const text =
@@ -97,6 +129,8 @@ export default async function handler(req, res) {
       `Телефон: ${cleanPhone}\n` +
       (tgUser ? `Telegram: ${tgUser}\n` : '')
 
+    let notificationStatus = 'unknown'
+    try {
     const r = await tg('sendMessage', {
       chat_id: place.admin_chat_id || process.env.ADMIN_CHAT_ID,
       text,
@@ -110,8 +144,20 @@ export default async function handler(req, res) {
       },
     })
 
-    if (!r.ok) return res.status(502).json({ ok: false })
-    return res.status(200).json({ ok: true })
+    const result = await r.json()
+    notificationStatus = r.ok && result.ok === true ? 'sent' : 'failed'
+    } catch {
+      // Delivery may have succeeded before the connection was lost. Do not resend blindly.
+      notificationStatus = 'unknown'
+    }
+    try {
+      await db(`bookings?id=eq.${booking.id}`, {
+        method: 'PATCH', body: JSON.stringify({ notification_status: notificationStatus }),
+      })
+    } catch {
+      console.error('booking_notification_status_write_failed', booking.id)
+    }
+    return res.status(200).json({ ok: true, bookingId: booking.id, notificationStatus })
   } catch {
     return res.status(500).json({ ok: false })
   }
