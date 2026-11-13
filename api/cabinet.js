@@ -1,4 +1,6 @@
-import { db, tg, verifyInitData } from './_lib.js'
+import crypto from 'node:crypto'
+import { deliverFor } from './_delivery.js'
+import { db, verifyInitData } from './_lib.js'
 
 // Заклади, якими керує користувач. Власник (ADMIN_CHAT_ID) бачить усі.
 async function managedPlaces(userId) {
@@ -17,11 +19,7 @@ function kyivDate(offsetDays = 0) {
 // Яким має бути поточний статус, щоб дозволити перехід
 const RULES = { confirmed: 'new', rejected: 'new', cancelled: 'confirmed' }
 
-const MESSAGES = {
-  confirmed: 'Ваше бронювання підтверджено ✅',
-  rejected: 'На жаль, заклад не може прийняти цю бронь ❌',
-  cancelled: 'На жаль, заклад скасував вашу бронь. Зв’яжіться із закладом або оберіть інший час.',
-}
+export const config = { maxDuration: 60 }
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ ok: false })
@@ -49,7 +47,7 @@ export default async function handler(req, res) {
       const bookings = await db(
         `bookings?place_id=in.(${ids})&booking_date=gte.${kyivDate(-30)}` +
           `&order=booking_date.asc,booking_time.asc&limit=300` +
-          `&select=id,place_id,place_name,booking_date,booking_time,guests,client_name,client_phone,client_tg_name,status`
+          `&select=id,place_id,place_name,booking_date,booking_time,guests,client_name,client_phone,client_tg_name,status,notification_status`
       )
       return res.status(200).json({ ok: true, places, bookings })
     }
@@ -66,25 +64,14 @@ export default async function handler(req, res) {
         {
           method: 'PATCH',
           headers: { Prefer: 'return=representation' },
-          body: JSON.stringify({ status, status_actor_id: userId, status_source: 'restaurant' }),
+          body: JSON.stringify({ status, status_actor_id: userId, status_source: 'restaurant', delivery_event_nonce: crypto.randomUUID() }),
         }
       )
       if (!rows.length) return res.status(409).json({ ok: false })
 
       const b = rows[0]
-      if (b.client_tg_id) {
-        await tg('sendMessage', {
-          chat_id: b.client_tg_id,
-          text:
-            `${MESSAGES[status]}\n\n` +
-            `Заклад: ${b.place_name}\n` +
-            `Дата: ${b.booking_date}\n` +
-            `Час: ${String(b.booking_time).slice(0, 5)}\n` +
-            `Гостей: ${b.guests}\n` +
-            `Ім'я: ${b.client_name}`,
-        })
-      }
-      return res.status(200).json({ ok: true })
+      const deliveryStatus = await deliverFor(b.id, status === 'cancelled' ? 'cancelled_restaurant' : status)
+      return res.status(200).json({ ok: true, deliveryStatus })
     }
 
     return res.status(400).json({ ok: false })

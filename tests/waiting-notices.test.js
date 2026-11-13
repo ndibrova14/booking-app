@@ -22,52 +22,32 @@ test('notification explains pending status without claiming cancellation',()=>{
   assert.ok(text.includes('Моїх бронюваннях'))
   assert.ok(text.includes('12:30'))
 })
-test('changed statuses are skipped; one pending guest is notified without mutating booking status',async()=>{
-  const original=globalThis.fetch
-  const updates=[];let messages=0;let claims=0
-  globalThis.fetch=async(url,options={})=>{
-    const u=String(url)
-    if(u.endsWith('/rpc/poimo_claim_waiting_notices')){
-      claims++
-      return Response.json(claims===1?[{id:1},{id:2,client_tg_id:123,place_name:'Test',booking_date:'2026-12-01',booking_time:'12:30'}]:[])
-    }
-    if(options.method==='PATCH'){
-      const data=JSON.parse(options.body)
-      assert.equal(Object.hasOwn(data,'status'),false)
-      updates.push(data)
-      return new Response(null,{status:204})
-    }
-    if(u.includes('api.telegram.org')){
-      messages++
-      assert.equal(JSON.parse(options.body).chat_id,123)
-      return Response.json({ok:true})
-    }
-    assert.ok(u.includes('status=eq.new'))
-    return Response.json(u.includes('id=eq.1&')?[]:[{id:2}])
-  }
-  try{
-    const r=await call('Bearer secret')
-    assert.equal(r.status,200);assert.equal(r.body.sent,1)
-    assert.equal(updates[0].waiting_notice_state,'skipped')
-    assert.equal(updates[1].waiting_notice_state,'sent')
-    assert.ok(updates[1].waiting_notice_sent_at)
-    await call('Bearer secret')
-    assert.equal(messages,1)
-  }finally{globalThis.fetch=original}
+test('queued warnings skip changed statuses and do not send again after a completed claim',async()=>{
+ const original=globalThis.fetch
+ const states=[];let messages=0;let calls=0
+ const future=new Date(Date.now()+86400000).toISOString().slice(0,10)
+ globalThis.fetch=async(url,options={})=>{
+  const u=String(url)
+  if(u.endsWith('/rpc/poimo_queue_waiting_notices'))return Response.json(++calls===1?[{id:1},{id:2}]:[])
+  if(u.endsWith('/rpc/poimo_claim_delivery')){const id=JSON.parse(options.body).p_booking_id;return Response.json([{id,booking_id:id,kind:'waiting',lock_token:'test'}])}
+  if(u.endsWith('/rpc/poimo_finish_delivery')){const state=JSON.parse(options.body).p_state;states.push(state);return Response.json([{state}])}
+  if(u.includes('api.telegram.org')){messages++;return Response.json({ok:true,result:{message_id:7}})}
+  const id=new URL(url).searchParams.get('id')==='eq.1'?1:2
+  return Response.json([{id,status:id===1?'confirmed':'new',client_tg_id:123,booking_date:future,booking_time:'12:30'}])
+ }
+ try{const r=await call('Bearer secret');assert.equal(r.status,200);assert.equal(r.body.sent,1);assert.deepEqual(states,['skipped','sent']);await call('Bearer secret');assert.equal(messages,1)}finally{globalThis.fetch=original}
 })
-test('network-uncertain delivery is recorded without automatic duplicate attempts',async()=>{
-  const original=globalThis.fetch
-  let update;let attempts=0
-  globalThis.fetch=async(url,options={})=>{
-    const u=String(url)
-    if(u.endsWith('/rpc/poimo_claim_waiting_notices'))return Response.json([{id:3,client_tg_id:123,booking_time:'12:30'}])
-    if(options.method==='PATCH'){update=JSON.parse(options.body);return new Response(null,{status:204})}
-    if(u.includes('api.telegram.org')){attempts++;throw Error('timeout')}
-    return Response.json([{id:3}])
-  }
-  try{
-    assert.equal((await call('Bearer secret')).status,200)
-    assert.equal(update.waiting_notice_state,'unknown')
-    assert.equal(attempts,1)
-  }finally{globalThis.fetch=original}
+test('network-uncertain delivery is recorded without an automatic immediate second send',async()=>{
+ const original=globalThis.fetch
+ let state;let messages=0
+ const future=new Date(Date.now()+86400000).toISOString().slice(0,10)
+ globalThis.fetch=async(url,options={})=>{
+  const u=String(url)
+  if(u.endsWith('/rpc/poimo_queue_waiting_notices'))return Response.json([{id:3}])
+  if(u.endsWith('/rpc/poimo_claim_delivery'))return Response.json([{id:3,booking_id:3,kind:'waiting',lock_token:'test'}])
+  if(u.endsWith('/rpc/poimo_finish_delivery')){state=JSON.parse(options.body).p_state;return Response.json([{state}])}
+  if(u.includes('api.telegram.org')){messages++;throw Error('timeout')}
+  return Response.json([{id:3,status:'new',client_tg_id:123,booking_date:future,booking_time:'12:30'}])
+ }
+ try{assert.equal((await call('Bearer secret')).status,200);assert.equal(state,'unknown');assert.equal(messages,1)}finally{globalThis.fetch=original}
 })

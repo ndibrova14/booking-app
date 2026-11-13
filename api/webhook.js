@@ -1,7 +1,11 @@
+import crypto from 'node:crypto'
+import { deliverFor } from './_delivery.js'
 import { db, tg } from './_lib.js'
 
 // Адреса застосунку. Коли з'явиться власний домен, змініть тут
 const APP_URL = 'https://booking-app-pearl-iota.vercel.app/'
+
+export const config = { maxDuration: 60 }
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
@@ -77,7 +81,7 @@ export default async function handler(req, res) {
     const updated = await db(`bookings?id=eq.${id}&status=eq.new`, {
       method: 'PATCH',
       headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({ status: confirmed ? 'confirmed' : 'rejected', status_actor_id: cb.from.id, status_source: 'restaurant' }),
+      body: JSON.stringify({ status: confirmed ? 'confirmed' : 'rejected', status_actor_id: cb.from.id, status_source: 'restaurant', delivery_event_nonce: crypto.randomUUID() }),
     })
 
     if (!updated.length) {
@@ -92,20 +96,8 @@ export default async function handler(req, res) {
     })
     await answer(confirmed ? 'Підтверджено' : 'Відхилено')
 
-    if (b.client_tg_id) {
-      await tg('sendMessage', {
-        chat_id: b.client_tg_id,
-        text:
-          (confirmed
-            ? 'Ваше бронювання підтверджено ✅'
-            : 'На жаль, заклад не може прийняти цю бронь ❌') +
-          `\n\nЗаклад: ${b.place_name}\n` +
-          `Дата: ${b.booking_date}\n` +
-          `Час: ${String(b.booking_time).slice(0, 5)}\n` +
-          `Гостей: ${b.guests}\n` +
-          `Ім'я: ${b.client_name}`,
-      })
-    }
+    await deliverFor(b.id, confirmed ? 'confirmed' : 'rejected')
+
   } catch {
     // Telegram не повинен повторювати запит через нашу помилку
   }

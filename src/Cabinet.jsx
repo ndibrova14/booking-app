@@ -8,6 +8,8 @@ const TABS = [
   { id: 'archive', label: 'Архів' },
 ]
 
+const DELIVERY_LABEL = { sent: 'Доставлено', queued: 'У черзі', retrying: 'Повторна спроба запланована', sending: 'Надсилається', failed: 'Не доставлено — перевірте підключення бота', unknown: 'Доставку не підтверджено — перевірте чат', skipped: 'Заявка вже не потребує повідомлення', pending: 'Стан старої доставки не уточнено' }
+
 const STATUS_LABEL = {
   new: 'Нова',
   confirmed: 'Підтверджено',
@@ -125,6 +127,7 @@ export default function Cabinet({ onBack, onPlaceSaved }) {
               </span>
             </div>
             {places.length > 1 && <p>{b.place_name}</p>}
+            {b.notification_status && <p className="booking-note delivery-status">Повідомлення закладу: {DELIVERY_LABEL[b.notification_status] || 'Стан уточнюється'}</p>}
             <p>{b.guests} гост. · {b.client_name}</p>
             <p>
               <a href={`tel:${b.client_phone.replace(/[^\d+]/g, '')}`}>{b.client_phone}</a>

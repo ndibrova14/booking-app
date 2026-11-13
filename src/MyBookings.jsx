@@ -40,7 +40,7 @@ export default function MyBookings({ onBack }) {
     setNotice('')
     try {
       const result = await api({ action: 'cancel', bookingId: id })
-      setNotice(result.notified ? 'Бронювання скасовано. Заклад повідомлено.' : 'Бронювання скасовано, але доставку повідомлення закладу не підтверджено. За потреби зв’яжіться із закладом.')
+      setNotice(result.notified ? 'Бронювання скасовано. Заклад повідомлено.' : ['queued', 'processing'].includes(result.deliveryStatus) ? 'Бронювання скасовано. Повідомлення закладу ще доставляється; повторювати скасування не потрібно.' : 'Бронювання скасовано, але доставку повідомлення закладу не підтверджено. За потреби зв’яжіться із закладом.')
       setConfirmId(null)
       await load()
     } catch (e) {

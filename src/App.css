@@ -368,3 +368,5 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 
 .place-photo-link { display: block; width: 100%; padding: 0; border: 0; background: transparent; cursor: pointer; }
 .place-photo-link:focus-visible { outline: 3px solid var(--accent); outline-offset: -4px; }
+
+.delivery-status { margin: 10px 0; line-height: 1.5; }

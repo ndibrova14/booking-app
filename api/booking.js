@@ -1,4 +1,5 @@
-import { db, tg, verifyInitData } from './_lib.js'
+import { deliverFor, publicDeliveryState } from './_delivery.js'
+import { db, verifyInitData } from './_lib.js'
 
 const REQUEST_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
@@ -26,6 +27,8 @@ function kyivDate(offsetDays = 0) {
     new Date(Date.now() + offsetDays * 86400000)
   )
 }
+
+export const config = { maxDuration: 60 }
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -128,7 +131,7 @@ export default async function handler(req, res) {
         status_actor_id: userId,
         status_source: 'guest',
         request_id: requestKey,
-        notification_status: 'pending',
+        notification_status: 'queued',
         reminder_enabled: reminderEnabled,
         place_id: place.id,
         place_name: place.name,
@@ -151,44 +154,7 @@ export default async function handler(req, res) {
     }
     const booking = rows[0]
 
-    const text =
-      `Нова заявка на бронювання\n\n` +
-      `Заклад: ${place.name}\n` +
-      `Дата: ${date}\n` +
-      `Час: ${time}\n` +
-      `Гостей: ${g}\n` +
-      `Ім'я: ${cleanName}\n` +
-      `Телефон: ${cleanPhone}\n` +
-      (tgUser ? `Telegram: ${tgUser}\n` : '')
-
-    let notificationStatus = 'unknown'
-    try {
-    const r = await tg('sendMessage', {
-      chat_id: place.admin_chat_id || process.env.ADMIN_CHAT_ID,
-      text,
-      reply_markup: {
-        inline_keyboard: [
-          [
-            { text: '✅ Підтвердити', callback_data: `ok:${booking.id}` },
-            { text: '❌ Відхилити', callback_data: `no:${booking.id}` },
-          ],
-        ],
-      },
-    })
-
-    const result = await r.json()
-    notificationStatus = r.ok && result.ok === true ? 'sent' : 'failed'
-    } catch {
-      // Delivery may have succeeded before the connection was lost. Do not resend blindly.
-      notificationStatus = 'unknown'
-    }
-    try {
-      await db(`bookings?id=eq.${booking.id}`, {
-        method: 'PATCH', body: JSON.stringify({ notification_status: notificationStatus }),
-      })
-    } catch {
-      console.error('booking_notification_status_write_failed', booking.id)
-    }
+    const notificationStatus = publicDeliveryState(await deliverFor(booking.id, 'new_booking'))
     return res.status(200).json({ ok: true, bookingId: booking.id, notificationStatus })
   } catch {
     return res.status(500).json({ ok: false })
