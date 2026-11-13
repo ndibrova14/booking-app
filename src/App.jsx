@@ -123,21 +123,16 @@ function HeartIcon({ filled = false }) {
 }
 
 function PlaceCard({ place, onBook, onDetails, favorites }) {
+  const [failedPhoto, setFailedPhoto] = useState(null)
   const open = isOpenNow(place.hours)
   const statusText = open === null ? '' : open ? 'Відкрито' : 'Зачинено'
   const hasMenu = /^https?:\/\//i.test(place.menu_url || '')
   return (
     <article className="card place-card">
-      {place.photo_url && (
-        <img
-          className="photo"
-          src={place.photo_url}
-          alt={place.name}
-          loading="lazy"
-          onError={(e) => {
-            e.currentTarget.style.display = 'none'
-          }}
-        />
+      {place.photo_url && failedPhoto !== place.photo_url && (
+        <button type="button" className="place-photo-link" aria-label={`Детальніше про заклад: ${place.name}`} onClick={() => onDetails(place)}>
+          <img className="photo" src={place.photo_url} alt="" loading="lazy" onError={() => setFailedPhoto(place.photo_url)} />
+        </button>
       )}
       <div className="card-body">
         <div className="place-heading">
