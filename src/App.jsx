@@ -226,7 +226,7 @@ function AppContent() {
       tg.expand()
       const dark = tg.colorScheme === 'dark'
       document.documentElement.dataset.theme = dark ? 'dark' : 'light'
-      const bg = dark ? '#1c1917' : '#f7f2ec'
+      const bg = dark ? '#181818' : '#ffffff'
       try {
         tg.setHeaderColor(bg)
         tg.setBackgroundColor(bg)
@@ -401,9 +401,9 @@ function AppContent() {
   if (screen === 'cabinet') return <Suspense fallback={<PageLoading onClose={() => setScreen('catalog')} />}><Cabinet onBack={() => setScreen('catalog')} onPlaceSaved={(updated) => setPlaces((old) => old.map((p) => p.id === updated.id ? { ...p, ...updated } : p))} /></Suspense>
   
   return (
-    <div className={view === 'map' ? 'app map-mode' : 'app'}>
+    <div className={view === 'map' ? 'app catalog-app map-mode' : 'app catalog-app'}>
          <div className="topbar">
-        <div className="catalog-title"><p className="city-label">Київ</p><h1>Де поїмо?</h1></div>
+        <div className="catalog-title"><p className="city-label"><LocationIcon />Київ</p><h1>Де поїмо<span className="title-accent">?</span></h1></div>
         {isAdmin && (
           <button className="cab-btn" onClick={() => setScreen('cabinet')}>
             Кабінет

@@ -157,8 +157,8 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .place-hours { font-size: 12px; color: var(--hint); }
 .place-card .actions { margin-top: 16px; }
 .place-card .book, .place-card .menu-btn { min-height: 46px; font-size: 14px; border-radius: 12px; padding: 11px 14px; }
-:root { --hint: #71665e; }
-:root[data-theme='dark'] { --hint: #b9ada4; }
+:root { --hint: #686868; }
+:root[data-theme='dark'] { --hint: #b5b5b5; }
 @media (max-width: 350px) {
   .catalog-title h1 { font-size: 25px; }
   .place-card .card-body { padding: 16px; }
@@ -370,3 +370,50 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .place-photo-link:focus-visible { outline: 3px solid var(--accent); outline-offset: -4px; }
 
 .delivery-status { margin: 10px 0; line-height: 1.5; }
+
+/* Minimal Orange catalog. Keep feature layouts and existing event handlers intact. */
+.catalog-app { padding: 20px 16px max(32px, env(safe-area-inset-bottom)); }
+.catalog-app .topbar { margin-bottom: 18px; }
+.catalog-app .city-label { display: flex; align-items: center; gap: 5px; color: var(--text); font-size: 13px; letter-spacing: 0; }
+.catalog-app .city-label .location-icon { color: var(--accent); }
+.catalog-app .catalog-title h1 { margin-top: 8px; font-size: 34px; font-weight: 750; letter-spacing: -1.2px; }
+.title-accent { color: var(--accent); }
+.catalog-app .cab-btn { border-radius: 12px; font-weight: 600; }
+.catalog-app .my-bookings-link { background: var(--card); border-color: var(--line); color: var(--text); margin-bottom: 18px; font-weight: 600; }
+.catalog-app .my-bookings-link span { color: var(--accent); font-size: 20px; }
+.catalog-app .collection-tabs { gap: 0; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+.catalog-app .collection-tabs button { border: 0; border-radius: 0; background: transparent; color: var(--hint); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.catalog-app .collection-tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+.catalog-app .search { min-height: 48px; background: var(--card); border-radius: 14px; }
+.catalog-app .catalog-filter-toolbar { margin-top: 10px; gap: 8px; }
+.catalog-app .catalog-filter-toolbar .chip { border-radius: 12px; }
+.catalog-app .catalog-filter-toolbar .chip.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.catalog-app .catalog-sort { margin: 12px 0; }
+.catalog-app .tabs { background: var(--line); padding: 4px; gap: 4px; border-radius: 13px; }
+.catalog-app .tab { border: 1px solid transparent; border-radius: 10px; font-weight: 600; }
+.catalog-app .tab.active { color: var(--accent); border-color: var(--line); box-shadow: 0 1px 3px #00000008; }
+.catalog-app .place-card { border-radius: 20px; box-shadow: 0 4px 18px #00000005; margin-bottom: 20px; }
+.catalog-app .place-card .photo { aspect-ratio: 16 / 9; }
+.catalog-app .place-card .card-body { padding: 16px; }
+.catalog-app .place-heading h3 { font-family: inherit; font-size: 22px; letter-spacing: -.5px; }
+.catalog-app .place-title-row { gap: 8px; }
+.catalog-app .place-title-row h3 { flex-basis: 150px; }
+.catalog-app .favorite-button { margin-top: -5px; }
+.catalog-app .place-title-row .badge { align-self: center; }
+.catalog-app .place-cuisine { font-size: 13px; margin-top: 4px; }
+.catalog-app .place-location { margin-top: 10px; }
+.catalog-app .place-schedule { margin-top: 6px; }
+.catalog-app .place-details-link { margin-top: 4px; }
+.catalog-app .place-card .actions { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 4px; gap: 10px; }
+.catalog-app .place-card .book { font-weight: 650; }
+.catalog-app .place-card .menu-btn { color: var(--text); border-color: var(--line); }
+.catalog-app button:focus-visible, .catalog-app select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.catalog-app.map-mode { padding: 10px 12px max(8px, env(safe-area-inset-bottom)); }
+@media (max-width: 350px) {
+  .catalog-app { padding-left: 12px; padding-right: 12px; }
+  .catalog-app .catalog-title h1 { font-size: 30px; }
+  .catalog-app .place-heading h3 { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .catalog-app *, .catalog-app *::before, .catalog-app *::after { scroll-behavior: auto; transition: none; }
+}
