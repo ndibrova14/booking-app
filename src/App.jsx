@@ -487,7 +487,7 @@ function AppContent() {
       {onlyFavorites && !favorites.enabled && <p role="status">Відкрийте застосунок через Telegram, щоб бачити своє обране.</p>}
       {onlyFavorites && favorites.enabled && !favorites.loading && !favorites.error && <p className="booking-note favorites-hint">Збережені заклади. Пошук і фільтри також застосовуються до обраного.</p>}
 
-      {view === 'map' && <div className="map-mode-title"><strong>{onlyFavorites ? 'Обране на карті' : 'Заклади на карті'}</strong><span>Знайдено: {visible.length}</span></div>}
+      {view === 'map' && <div className="map-mode-title"><strong>{onlyFavorites ? 'Обране на карті' : 'Заклади на карті'}</strong></div>}
       <div className="search-wrap"><UiIcon name="search" /><input
         className="search"
         aria-label="Пошук закладу за назвою"
@@ -496,9 +496,6 @@ function AppContent() {
         onChange={(e) => setQuery(e.target.value)}
       /></div>
 
-      <div className="catalog-quick-controls">
-        <button type="button" aria-pressed={filters.onlyOpen} className={filters.onlyOpen ? 'chip active' : 'chip'} onClick={() => setFilters((old) => ({ ...old, onlyOpen: !old.onlyOpen }))}><CatalogIcon name="clock" />Відкрито зараз</button>
-      </div>
       {filterChips.length > 0 && <div className="selected-filters" aria-label="Обрані фільтри">{filterChips.map((chip) => <button type="button" key={chip.key} aria-label={`Прибрати фільтр: ${chip.label}`} onClick={chip.remove}>{chip.label}<span aria-hidden="true">×</span></button>)}</div>}
       <label className="catalog-sort"><span>Сортування</span><select aria-label="Сортування закладів" value={me ? 'near' : 'default'} disabled={locating} onChange={(e) => { if ((e.target.value === 'near') !== Boolean(me)) toggleNearMe() }}><option value="default">За замовчуванням</option><option value="near">Найближчі</option></select>{locating && <span role="status">Шукаємо вас…</span>}</label>
       {filtersOpen && <Suspense fallback={<OverlayLoading onClose={() => setFiltersOpen(false)} />}><FilterSheet value={filters} categories={CATEGORIES} renderCategoryIcon={(name) => <CatalogIcon name={name} />} districts={districtOptions} cuisines={cuisineOptions}
@@ -508,7 +505,13 @@ function AppContent() {
 
       {!loading && !loadError && (
         <div className="results-bar">
-          <p role="status" aria-live="polite">Знайдено закладів: <strong>{visible.length}</strong></p>
+          <div className="results-summary">
+            <p role="status" aria-live="polite">Знайдено: <strong>{visible.length}</strong></p>
+            <button type="button" role="switch" aria-checked={filters.onlyOpen} className="open-now-switch"
+              onClick={() => setFilters((old) => ({ ...old, onlyOpen: !old.onlyOpen }))}>
+              <span>Відкрито зараз</span><span className="switch-track" aria-hidden="true"><span /></span>
+            </button>
+          </div>
           {hasFilters && <button type="button" className="reset-filters" onClick={resetFilters}>Скинути</button>}
         </div>
       )}
