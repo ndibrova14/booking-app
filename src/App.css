@@ -495,3 +495,10 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .booking-dialog .modal { margin: 0; }
 .guest-section > .app { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
 .bottom-nav button:focus-visible, .booking-dialog button:focus-visible, .booking-dialog input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* One navigation surface: primary destinations live only in the bottom bar. */
+.catalog-quick-controls { display: flex; margin: 10px 0; }
+.catalog-quick-controls .chip { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 9px 14px; border-radius: 14px; font-size: 13px; }
+.catalog-quick-controls .chip.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.catalog-app .results-bar { margin: 12px 0 16px; }
+.map-mode > .search-wrap, .map-mode > .catalog-quick-controls { flex: none; }

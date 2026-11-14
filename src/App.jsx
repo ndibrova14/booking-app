@@ -167,7 +167,7 @@ function BookingDialog({ onClose, sending, children }) {
   </dialog>
 }
 
-function BottomNav({ active, onNavigate }) {
+function BottomNav({ active, onNavigate, filtersOpen, filterCount }) {
   return <nav className="bottom-nav" aria-label="Основна навігація">
     {[
       ['home', 'Головна', <UiIcon key="home" name="home" />],
@@ -175,8 +175,10 @@ function BottomNav({ active, onNavigate }) {
       ['favorites', 'Обране', <HeartIcon key="favorites" />],
       ['bookings', 'Бронювання', <UiIcon key="bookings" name="calendar" />],
       ['filters', 'Фільтри', <UiIcon key="filters" name="more" />],
-    ].map(([id, label, icon]) => <button key={id} type="button" className={active === id ? 'active' : ''}
-      aria-current={active === id ? 'page' : undefined} onClick={() => onNavigate(id)}>{icon}<span>{label}</span></button>)}
+    ].map(([id, label, icon]) => <button key={id} type="button" className={active === id || (id === 'filters' && filtersOpen) ? 'active' : ''}
+      aria-current={active === id ? 'page' : undefined}
+      aria-haspopup={id === 'filters' ? 'dialog' : undefined} aria-expanded={id === 'filters' ? filtersOpen : undefined}
+      onClick={() => onNavigate(id)}>{icon}<span>{label}{id === 'filters' && filterCount > 0 ? ` · ${filterCount}` : ''}</span></button>)}
   </nav>
 }
 
@@ -464,7 +466,7 @@ function AppContent() {
     if (section === 'filters') setFiltersOpen(true)
   }
   const activeNav = screen === 'my-bookings' ? 'bookings' : view === 'map' ? 'map' : onlyFavorites ? 'favorites' : 'home'
-  const navigation = <BottomNav active={activeNav} onNavigate={navigate} />
+  const navigation = <BottomNav active={activeNav} onNavigate={navigate} filtersOpen={filtersOpen} filterCount={filterCount} />
   if (screen === 'my-bookings') return <div className="guest-section"><Suspense fallback={<PageLoading onClose={() => setScreen('catalog')} />}><MyBookings onBack={() => setScreen('catalog')} /></Suspense>{navigation}</div>
   if (screen === 'cabinet') return <Suspense fallback={<PageLoading onClose={() => setScreen('catalog')} />}><Cabinet onBack={() => setScreen('catalog')} onPlaceSaved={(updated) => setPlaces((old) => old.map((p) => p.id === updated.id ? { ...p, ...updated } : p))} /></Suspense>
   
@@ -472,7 +474,7 @@ function AppContent() {
     <div className={view === 'map' ? 'app catalog-app map-mode' : 'app catalog-app'}>
       <div className="brand-row"><span className="brand-mark"><CatalogIcon name="Ресторани" /></span><strong>Поїмо</strong></div>
          <div className="topbar">
-        <div className="catalog-title"><p className="city-label"><LocationIcon />Київ</p><h1><span className="headline-word">Де поїмо?</span> <span className="greeting" aria-hidden="true">👋</span></h1></div>
+        <div className="catalog-title"><p className="city-label"><LocationIcon />Київ</p><h1><span className="headline-word">{onlyFavorites ? 'Обране' : 'Де поїмо?'}</span> {!onlyFavorites && <span className="greeting" aria-hidden="true">👋</span>}</h1></div>
         {isAdmin && (
           <button className="cab-btn" onClick={() => setScreen('cabinet')}>
             <UiIcon name="user" />Кабінет
@@ -480,12 +482,6 @@ function AppContent() {
         )}
       </div>
 
-      <button className="my-bookings-link" onClick={() => setScreen("my-bookings")}><span className="bookings-label"><UiIcon name="calendar" />Мої бронювання</span><span aria-hidden="true">→</span></button>
-
-      <div className="collection-tabs" role="group" aria-label="Колекція закладів">
-        <button className={!onlyFavorites ? 'active' : ''} aria-pressed={!onlyFavorites} onClick={() => setOnlyFavorites(false)}><UiIcon name="serve" />Усі заклади</button>
-        <button className={onlyFavorites ? 'active' : ''} aria-pressed={onlyFavorites} onClick={() => setOnlyFavorites(true)}><HeartIcon filled={onlyFavorites} />Обране{!favorites.loading && !favorites.error && favorites.enabled ? ` · ${places.filter((p) => favorites.ids.includes(String(p.id))).length}` : ''}</button>
-      </div>
       {favorites.loading && <p className="booking-note" role="status">Завантажуємо обране…</p>}
       {favorites.error && <div className="favorites-message" role="alert"><p>{favorites.error}</p>{favorites.enabled && <button className="menu-btn" disabled={favorites.busyIds.length > 0} onClick={favorites.retry}>Оновити обране</button>}</div>}
       {onlyFavorites && !favorites.enabled && <p role="status">Відкрийте застосунок через Telegram, щоб бачити своє обране.</p>}
@@ -500,11 +496,8 @@ function AppContent() {
         onChange={(e) => setQuery(e.target.value)}
       /></div>
 
-      <div className="catalog-filter-toolbar">
+      <div className="catalog-quick-controls">
         <button type="button" aria-pressed={filters.onlyOpen} className={filters.onlyOpen ? 'chip active' : 'chip'} onClick={() => setFilters((old) => ({ ...old, onlyOpen: !old.onlyOpen }))}><CatalogIcon name="clock" />Відкрито зараз</button>
-        <button type="button" className={filterCount ? 'chip active' : 'chip'} aria-haspopup="dialog" aria-expanded={filtersOpen} onClick={() => setFiltersOpen(true)}>
-          <svg className="catalog-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 7h16M4 17h16M8 4v6M16 14v6" /></svg>Фільтри{filterCount ? ` · ${filterCount}` : ''}
-        </button>
       </div>
       {filterChips.length > 0 && <div className="selected-filters" aria-label="Обрані фільтри">{filterChips.map((chip) => <button type="button" key={chip.key} aria-label={`Прибрати фільтр: ${chip.label}`} onClick={chip.remove}>{chip.label}<span aria-hidden="true">×</span></button>)}</div>}
       <label className="catalog-sort"><span>Сортування</span><select aria-label="Сортування закладів" value={me ? 'near' : 'default'} disabled={locating} onChange={(e) => { if ((e.target.value === 'near') !== Boolean(me)) toggleNearMe() }}><option value="default">За замовчуванням</option><option value="near">Найближчі</option></select>{locating && <span role="status">Шукаємо вас…</span>}</label>
@@ -522,21 +515,6 @@ function AppContent() {
       {me && <p className="hint left">Спочатку найближчі до вас. Відстань — по прямій.</p>}
 
       {locError && <p className="hint">{locError}</p>}
-
-      <div className="tabs">
-        <button
-          className={view === 'list' ? 'tab active' : 'tab'}
-          onClick={() => setView('list')}
-        >
-          <UiIcon name="list" />Список
-        </button>
-        <button
-          className={view === 'map' ? 'tab active' : 'tab'}
-          onClick={() => setView('map')}
-        >
-          <UiIcon name="map" />Карта
-        </button>
-      </div>
 
       {loading && <p>Завантаження…</p>}
       {loadError && <p>Не вдалося завантажити заклади. Спробуйте пізніше.</p>}
