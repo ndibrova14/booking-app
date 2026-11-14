@@ -514,3 +514,87 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .sheet-sort .sheet-help { margin: 0; }
 .sheet-sort select { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--text); font: inherit; font-size: 16px; }
 .sheet-sort select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Minimal Orange: venue details and guest bookings. */
+.screen-icon { width: 20px; height: 20px; flex: none; }
+.venue-page { width: min(100%, 560px); background: var(--card); }
+.venue-hero { position: relative; }
+.venue-page .place-details-toolbar { position: fixed; z-index: 2; top: 0; left: 50%; right: auto; width: min(100%, 560px); transform: translateX(-50%); padding: max(12px, env(safe-area-inset-top)) 14px 12px; border: 0; background: none; pointer-events: none; }
+.venue-page .place-details-toolbar button { pointer-events: auto; min-width: 44px; min-height: 44px; padding: 10px; border-radius: 999px; background: var(--card); color: var(--text); box-shadow: 0 2px 12px #0002; }
+.venue-page .place-details-toolbar button.saved { color: var(--accent); }
+.venue-page .place-details-toolbar button:first-child { padding-right: 15px; font-size: 13px; }
+.venue-page .venue-gallery-track { gap: 8px; }
+.venue-page .venue-gallery-track img { aspect-ratio: 16 / 10; }
+.venue-gallery-hint { position: absolute; bottom: 12px; right: 14px; padding: 6px 10px; border-radius: 999px; background: #202020cc; color: white !important; font-size: 12px; pointer-events: none; }
+.venue-photo-empty { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; aspect-ratio: 16 / 9; min-height: 180px; background: var(--bg); color: var(--hint); border-bottom: 1px solid var(--line); font-size: 13px; }
+.venue-photo-empty .screen-icon { width: 44px; height: 44px; }
+.venue-page .place-details-body { padding: 22px 20px 28px; }
+.venue-page h1 { font-family: inherit; font-size: 30px; font-weight: 750; letter-spacing: -.9px; }
+.venue-page .venue-eyebrow { margin-bottom: 6px; font-size: 12px; }
+.venue-page .venue-cuisine { margin-top: 6px; font-size: 14px; }
+.venue-page .venue-status-row { margin-top: 12px; font-size: 13px; }
+.venue-page .badge.open { background: #edf8f0; color: #196334; }
+.venue-quick-actions { display: grid; grid-template-columns: repeat(auto-fit,minmax(120px,1fr)); gap: 10px; margin-top: 18px; }
+.venue-quick-actions button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
+.venue-quick-actions button .screen-icon, .venue-quick-actions button > span { color: var(--accent); }
+.venue-page .venue-section { margin-top: 22px; padding-top: 20px; }
+.venue-page .venue-section h2 { font-size: 17px; letter-spacing: -.3px; }
+.venue-page .venue-section p { font-size: 14px; line-height: 1.65; }
+.venue-facts { display: flex; flex-direction: column; gap: 16px; }
+.venue-facts > div { display: flex; align-items: flex-start; gap: 12px; }
+.venue-facts > div > .screen-icon { color: var(--accent); margin-top: 3px; }
+.venue-facts .fact-label { color: var(--hint); font-size: 12px; }
+.venue-page .venue-facts p { margin: 3px 0 0; line-height: 1.45; }
+.venue-facts small { display: block; margin-top: 5px; font-size: 12px; color: var(--hint); }
+.venue-page .venue-amenities li { display: flex; align-items: center; gap: 6px; padding: 8px 11px; border-radius: 999px; font-size: 12px; }
+.venue-amenities .screen-icon { width: 15px; height: 15px; color: var(--accent); }
+.venue-page .place-details-footer { box-shadow: 0 -4px 16px #00000005; }
+.venue-page .place-details-footer p { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; }
+.venue-page .place-details-footer p .screen-icon { width: 15px; height: 15px; }
+.venue-page .place-details-footer .book { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 48px; border-radius: 14px; font-size: 15px; }
+.my-bookings { padding-top: 24px; }
+.bookings-page-header { margin-bottom: 22px; }
+.bookings-eyebrow { margin: 0 0 8px; font-size: 12px; color: var(--hint); }
+.my-bookings .topbar { gap: 12px; margin-bottom: 6px; }
+.my-bookings h1 { margin: 0; font-size: 28px; letter-spacing: -.9px; }
+.bookings-subtitle { margin: 0; font-size: 13px; line-height: 1.5; color: var(--hint); }
+.refresh-bookings { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border: 1px solid var(--line); border-radius: 14px; background: var(--card); color: var(--text); cursor: pointer; }
+.my-bookings .guest-booking-card { margin-bottom: 16px; border-radius: 20px; box-shadow: 0 3px 12px #00000005; }
+.my-bookings .guest-booking-card .card-body { padding: 18px; }
+.booking-card-heading { display: flex; align-items: flex-start; gap: 12px; }
+.booking-card-heading > div { min-width: 0; flex: 1; }
+.booking-symbol, .booking-empty-symbol { display: grid; place-items: center; flex: none; width: 48px; height: 48px; border: 1px solid var(--line); border-radius: 15px; background: var(--bg); color: var(--accent); }
+.booking-card-heading .badge { display: inline-block; max-width: 100%; padding: 4px 8px; font-size: 11px; line-height: 1.4; }
+.my-bookings .badge.st-new { background: #fff1e8; color: #993400; }
+.my-bookings .badge.st-confirmed { background: #edf8f0; color: #196334; }
+.my-bookings .badge.st-cancelled, .my-bookings .badge.st-rejected { background: var(--bg); color: var(--hint); }
+.my-bookings .guest-booking-card h2 { margin: 8px 0 3px; font-size: 19px; letter-spacing: -.5px; line-height: 1.25; overflow-wrap: anywhere; }
+.booking-city { color: var(--hint); font-size: 12px; }
+.booking-summary { display: grid; grid-template-columns: 1.4fr 1fr .8fr; gap: 10px; margin: 16px 0 12px; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.booking-summary > div { min-width: 0; }
+.booking-summary dt { display: flex; align-items: center; gap: 5px; margin-bottom: 7px; color: var(--hint); font-size: 12px; }
+.booking-summary dt .screen-icon { width: 15px; height: 15px; }
+.booking-summary dd { margin: 0; font-size: 14px; font-weight: 650; overflow-wrap: anywhere; }
+.my-bookings .booking-note { font-size: 12px; line-height: 1.6; }
+.my-bookings .cancel-booking { min-height: 44px; margin-top: 14px; padding: 9px 0; border: 0; background: none; color: var(--hint); font-size: 13px; font-weight: 500; text-decoration: underline; text-underline-offset: 4px; }
+.my-bookings .cancel-booking:disabled { text-decoration: none; }
+.my-bookings .cancel-confirm p { margin-top: 0; font-size: 14px; font-weight: 600; }
+.my-bookings .cancel-confirm .actions { flex-wrap: wrap; }
+.my-bookings .cancel-confirm .actions > button { flex: 1 1 110px; min-height: 44px; font-size: 13px; padding: 10px; }
+.cancel-confirm-button { border: 0; border-radius: 12px; background: #b42318; color: white; font-weight: 600; cursor: pointer; }
+.cancel-confirm-button:disabled { opacity: .6; }
+.bookings-empty { display: flex; flex-direction: column; align-items: center; padding: 32px 20px; margin: 20px 0; border: 1px solid var(--line); border-radius: 22px; background: var(--card); text-align: center; }
+.booking-empty-symbol { width: 68px; height: 68px; border-radius: 21px; }
+.booking-empty-symbol .screen-icon { width: 30px; height: 30px; }
+.my-bookings .bookings-empty h2 { margin: 20px 0 8px; font-size: 22px; letter-spacing: -.6px; }
+.bookings-empty p { margin: 0; max-width: 280px; color: var(--hint); font-size: 14px; line-height: 1.6; }
+.bookings-empty .book { width: auto; min-width: 180px; min-height: 46px; margin-top: 22px; font-size: 14px; }
+.bookings-feedback, .bookings-demo-note { padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; font-size: 13px; line-height: 1.6; }
+.bookings-feedback.error { border-left: 3px solid #b42318; }
+.bookings-feedback.error p { margin-top: 0; }
+.bookings-feedback.error .menu-btn { min-height: 44px; font-size: 13px; }
+.bookings-demo-note { color: var(--hint); background: var(--card); }
+.my-bookings button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+:root[data-theme='dark'] .venue-page .badge.open, :root[data-theme='dark'] .my-bookings .badge.st-confirmed { background: #193725; color: #a8e6b9; }
+:root[data-theme='dark'] .my-bookings .badge.st-new { background: #3b281f; color: #ffc19d; }
+@media (max-width: 350px) { .my-bookings h1 { font-size: 25px; } .my-bookings .guest-booking-card .card-body { padding: 14px; } .booking-summary { gap: 6px; } .booking-summary dd { font-size: 13px; } .venue-page .place-details-body { padding: 20px 16px; } }

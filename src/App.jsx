@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense, Component } from 'react'
 import './App.css'
+import { PREVIEW_BOOKINGS } from './designPreview.js'
 import { trackEvent } from './analytics.js'
 import useFavorites from './useFavorites.js'
 import BookingContactFields from './BookingContactFields.jsx'
@@ -467,7 +468,7 @@ function AppContent() {
   }
   const activeNav = screen === 'my-bookings' ? 'bookings' : view === 'map' ? 'map' : onlyFavorites ? 'favorites' : 'home'
   const navigation = <BottomNav active={activeNav} onNavigate={navigate} filtersOpen={filtersOpen} filterCount={filterCount} />
-  if (screen === 'my-bookings') return <div className="guest-section"><Suspense fallback={<PageLoading onClose={() => setScreen('catalog')} />}><MyBookings onBack={() => setScreen('catalog')} /></Suspense>{navigation}</div>
+  if (screen === 'my-bookings') return <div className="guest-section"><Suspense fallback={<PageLoading onClose={() => setScreen('catalog')} />}><MyBookings onBack={() => setScreen('catalog')} previewBookings={import.meta.env.VITE_DESIGN_PREVIEW === 'true' ? PREVIEW_BOOKINGS : null} /></Suspense>{navigation}</div>
   if (screen === 'cabinet') return <Suspense fallback={<PageLoading onClose={() => setScreen('catalog')} />}><Cabinet onBack={() => setScreen('catalog')} onPlaceSaved={(updated) => setPlaces((old) => old.map((p) => p.id === updated.id ? { ...p, ...updated } : p))} /></Suspense>
   
   return (

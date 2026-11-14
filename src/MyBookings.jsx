@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import ScreenIcon from './ScreenIcon.jsx'
 
 const LABELS = { new: 'Очікує підтвердження', confirmed: 'Підтверджено', rejected: 'Відхилено', cancelled: 'Скасовано' }
 async function api(body) {
@@ -9,9 +10,10 @@ async function api(body) {
   if (!response.ok) throw new Error(String(response.status))
   return response.json()
 }
-export default function MyBookings({ onBack }) {
-  const [bookings, setBookings] = useState([])
-  const [loading, setLoading] = useState(true)
+export default function MyBookings({ onBack, previewBookings = null }) {
+  const isPreview = Array.isArray(previewBookings)
+  const [bookings, setBookings] = useState(() => isPreview ? previewBookings : [])
+  const [loading, setLoading] = useState(!isPreview)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [hasMore, setHasMore] = useState(false)
@@ -29,13 +31,13 @@ export default function MyBookings({ onBack }) {
     } finally { setLoading(false) }
   }, [])
   useEffect(() => {
-    if (!inTelegram) return
+    if (!inTelegram || isPreview) return
     const initial = setTimeout(load, 0)
     const timer = setInterval(load, 30000)
     return () => { clearTimeout(initial); clearInterval(timer) }
-  }, [load, inTelegram])
+  }, [load, inTelegram, isPreview])
   async function cancel(id) {
-    if (busy) return
+    if (busy || isPreview) return
     setBusy(true)
     setNotice('')
     try {
@@ -48,6 +50,7 @@ export default function MyBookings({ onBack }) {
     } finally { setBusy(false) }
   }
   async function more() {
+    if (isPreview) return
     setBusy(true)
     try {
       const result = await api({ action: 'list', offset: bookings.length })
@@ -57,24 +60,22 @@ export default function MyBookings({ onBack }) {
     finally { setBusy(false) }
   }
   return <div className="app my-bookings">
-    <button className="back" onClick={onBack}>← До каталогу</button>
-    <div className="topbar"><h1>Мої бронювання</h1>{inTelegram && <button className="cab-btn" disabled={busy || loading} onClick={() => { setLoading(true); load() }}>Оновити</button>}</div>
-    {!inTelegram ? <p>Відкрийте «Поїмо» через Telegram, щоб бачити свої бронювання.</p> : <>
-      {loading && <p role="status">Завантаження…</p>}
-      {error && <p role="alert">{error}</p>}
-      {notice && <p role="status">{notice}</p>}
-      {!loading && !error && bookings.length === 0 && <p>У вас ще немає бронювань. Оберіть заклад у каталозі.</p>}
-      {bookings.map((b) => <article className="card" key={b.id}><div className="card-body">
-        <span className={`badge st-${b.status}`}>{LABELS[b.status] || 'Статус уточнюється'}</span>
-        <h2>{b.place_name}</h2>
-        <p>{b.booking_date.split('-').reverse().join('.')} · {String(b.booking_time).slice(0, 5)} · Київ</p>
-        <p>Гостей: {b.guests}</p>
+    <header className="bookings-page-header"><p className="bookings-eyebrow">Поїмо · Київ</p><div className="topbar"><h1>Мої бронювання</h1>{inTelegram && !isPreview && <button className="refresh-bookings" aria-label="Оновити бронювання" disabled={busy || loading} onClick={() => { setLoading(true); load() }}><ScreenIcon name="refresh" /></button>}</div><p className="bookings-subtitle">Ваші плани та історія відвідувань</p></header>
+    {isPreview && <p className="bookings-demo-note" role="status">Демонстраційні записи. Вони не є справжніми бронюваннями.</p>}
+    {!inTelegram && !isPreview ? <div className="bookings-empty"><span className="booking-empty-symbol"><ScreenIcon name="calendar" /></span><h2>Ваші плани — тут</h2><p>Відкрийте «Поїмо» через Telegram, щоб бачити свої бронювання.</p><button className="book" onClick={onBack}>Знайти заклад</button></div> : <>
+      {loading && <p className="bookings-feedback" role="status">Завантажуємо ваші бронювання…</p>}
+      {error && <div className="bookings-feedback error" role="alert"><p>{error}</p><button className="menu-btn" disabled={busy || loading} onClick={() => { setLoading(true); load() }}>Спробувати ще раз</button></div>}
+      {notice && <p className="bookings-feedback" role="status">{notice}</p>}
+      {!loading && !error && bookings.length === 0 && <div className="bookings-empty"><span className="booking-empty-symbol"><ScreenIcon name="calendar" /></span><h2>Поки без планів?</h2><p>Знайдіть місце до смаку — ваше бронювання з’явиться тут.</p><button className="book" onClick={onBack}>Обрати заклад</button></div>}
+      {bookings.map((b) => <article className={`card guest-booking-card booking-${b.status}`} key={b.id}><div className="card-body">
+        <div className="booking-card-heading"><span className="booking-symbol"><ScreenIcon name="calendar" /></span><div><span className={`badge st-${b.status}`}>{LABELS[b.status] || 'Статус уточнюється'}</span><h2>{b.place_name}</h2><span className="booking-city">Київ</span></div></div>
+        <dl className="booking-summary"><div><dt><ScreenIcon name="calendar" />Дата</dt><dd>{b.booking_date.split('-').reverse().join('.')}</dd></div><div><dt><ScreenIcon name="clock" />Час</dt><dd>{String(b.booking_time).slice(0, 5)}</dd></div><div><dt><ScreenIcon name="guests" />Гостей</dt><dd>{b.guests}</dd></div></dl>
         {b.status === 'confirmed' && b.reminder_enabled && b.can_cancel && <p className="booking-note">Нагадування в Telegram увімкнене.</p>}
         {b.status === 'new' && (b.waiting_long ? <div className="waiting-notice"><strong>Заклад поки не відповів</strong><p>Минуло понад 15 хвилин. Бронювання ще не підтверджене. Можна зачекати або скасувати заявку й обрати інший заклад.</p><button type="button" className="menu-btn" onClick={onBack}>До каталогу</button></div> : <p className="booking-note">{b.can_cancel ? 'Очікуємо рішення закладу. Це ще не підтверджена бронь. Якщо відповіді не буде понад 15 хвилин, повідомимо в Telegram; перевірка виконується кожні 5 хвилин.' : 'Час цієї непідтвердженої заявки минув.'}</p>)}
-        {b.can_cancel && (confirmId === b.id ? <div className="cancel-confirm">
+        {b.can_cancel && (confirmId === b.id ? <div className="cancel-confirm" role="group" aria-label="Підтвердження скасування">
           <p>Скасувати це бронювання?</p>
-          <div className="actions"><button className="menu-btn" disabled={busy} onClick={() => setConfirmId(null)}>Залишити</button><button className="book" disabled={busy} onClick={() => cancel(b.id)}>{busy ? 'Скасовуємо…' : 'Так, скасувати'}</button></div>
-        </div> : <button className="menu-btn cancel-booking" disabled={busy} onClick={() => setConfirmId(b.id)}>Скасувати {b.status === 'new' ? 'заявку' : 'бронювання'}</button>)}
+          <div className="actions"><button className="menu-btn" disabled={busy || isPreview} onClick={() => setConfirmId(null)}>Залишити</button><button className="cancel-confirm-button" disabled={busy || isPreview} onClick={() => cancel(b.id)}>{busy ? 'Скасовуємо…' : 'Так, скасувати'}</button></div>
+        </div> : <button className="menu-btn cancel-booking" disabled={busy || isPreview} onClick={() => setConfirmId(b.id)}>Скасувати {b.status === 'new' ? 'заявку' : 'бронювання'}</button>)}
       </div></article>)}
       {hasMore && <button className="menu-btn" disabled={busy} onClick={more}>Показати ще</button>}
     </>}
