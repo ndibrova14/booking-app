@@ -509,3 +509,8 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .open-now-switch[aria-checked='true'] .switch-track > span { transform: translateX(14px); background: var(--accent-text); }
 .results-bar > .reset-filters { margin-top: 4px; }
 .map-mode > .results-bar { flex: none; }
+
+.sheet-sort { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.sheet-sort .sheet-help { margin: 0; }
+.sheet-sort select { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--text); font: inherit; font-size: 16px; }
+.sheet-sort select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

@@ -497,11 +497,10 @@ function AppContent() {
       /></div>
 
       {filterChips.length > 0 && <div className="selected-filters" aria-label="Обрані фільтри">{filterChips.map((chip) => <button type="button" key={chip.key} aria-label={`Прибрати фільтр: ${chip.label}`} onClick={chip.remove}>{chip.label}<span aria-hidden="true">×</span></button>)}</div>}
-      <label className="catalog-sort"><span>Сортування</span><select aria-label="Сортування закладів" value={me ? 'near' : 'default'} disabled={locating} onChange={(e) => { if ((e.target.value === 'near') !== Boolean(me)) toggleNearMe() }}><option value="default">За замовчуванням</option><option value="near">Найближчі</option></select>{locating && <span role="status">Шукаємо вас…</span>}</label>
-      {filtersOpen && <Suspense fallback={<OverlayLoading onClose={() => setFiltersOpen(false)} />}><FilterSheet value={filters} categories={CATEGORIES} renderCategoryIcon={(name) => <CatalogIcon name={name} />} districts={districtOptions} cuisines={cuisineOptions}
+      {filtersOpen && <Suspense fallback={<OverlayLoading onClose={() => setFiltersOpen(false)} />}><FilterSheet value={filters} sortValue={me ? 'near' : 'default'} sortingPending={locating} categories={CATEGORIES} renderCategoryIcon={(name) => <CatalogIcon name={name} />} districts={districtOptions} cuisines={cuisineOptions}
         unavailable={loading || loadError || (onlyFavorites && (favorites.loading || Boolean(favorites.error) || !favorites.enabled))}
         resultCount={(draft) => filterPlaces(places, draft, filterContext, isOpenNow).length}
-        onClose={() => setFiltersOpen(false)} onApply={(draft) => { setFilters(draft); setFiltersOpen(false); setPicked(null) }} /></Suspense>}
+        onClose={() => setFiltersOpen(false)} onApply={(draft, sort) => { setFilters(draft); setFiltersOpen(false); setPicked(null); if ((sort === 'near') !== Boolean(me)) void toggleNearMe() }} /></Suspense>}
 
       {!loading && !loadError && (
         <div className="results-bar">
@@ -515,6 +514,7 @@ function AppContent() {
           {hasFilters && <button type="button" className="reset-filters" onClick={resetFilters}>Скинути</button>}
         </div>
       )}
+      {locating && <p className="hint left" role="status">Шукаємо вас…</p>}
       {me && <p className="hint left">Спочатку найближчі до вас. Відстань — по прямій.</p>}
 
       {locError && <p className="hint">{locError}</p>}

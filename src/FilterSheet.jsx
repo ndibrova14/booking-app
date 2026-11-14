@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { emptyFilters, filterKey, AMENITY_FILTERS } from './catalogFilters.js'
 
-export default function FilterSheet({ value, categories, renderCategoryIcon, districts, cuisines, resultCount, unavailable, onApply, onClose }) {
+export default function FilterSheet({ value, sortValue = 'default', sortingPending = false, categories, renderCategoryIcon, districts, cuisines, resultCount, unavailable, onApply, onClose }) {
   const [draft, setDraft] = useState(() => ({ ...value, districts: [...value.districts], cuisines: [...value.cuisines] }))
   const [districtQuery, setDistrictQuery] = useState('')
+  const [sort, setSort] = useState(sortValue)
   const dialog = useRef(null)
   useEffect(() => {
     const node = dialog.current
@@ -24,8 +25,17 @@ export default function FilterSheet({ value, categories, renderCategoryIcon, dis
       const rect = dialog.current.getBoundingClientRect()
       if (event.clientY < rect.top || event.clientX < rect.left || event.clientX > rect.right) onClose()
     }}>
-    <header className="filter-sheet-header"><div><h2 id="filter-sheet-title">Фільтри</h2><p>Знайдіть місце під свій настрій</p></div><button type="button" className="sheet-close" aria-label="Закрити без застосування" onClick={onClose}>✕</button></header>
+    <header className="filter-sheet-header"><div><h2 id="filter-sheet-title">Фільтри й сортування</h2><p>Знайдіть місце під свій настрій</p></div><button type="button" className="sheet-close" aria-label="Закрити без застосування" onClick={onClose}>✕</button></header>
     <div className="filter-sheet-content">
+      <fieldset><legend>Сортування</legend>
+        <label className="sheet-sort"><span className="sheet-help">Порядок закладів</span>
+          <select aria-label="Сортування закладів" value={sort} disabled={sortingPending} onChange={(event) => setSort(event.target.value)}>
+            <option value="default">За замовчуванням</option><option value="near">Найближчі</option>
+          </select>
+        </label>
+        <p className="sheet-help">Для найближчих закладів потрібна геолокація. Запитаємо її після застосування.</p>
+        {sortingPending && <p className="sheet-help" role="status">Шукаємо вас…</p>}
+      </fieldset>
       <fieldset><legend>Тип закладу</legend><p className="sheet-help">Оберіть один тип або всі заклади</p>
         <div className="sheet-options sheet-categories">{categories.map((category) => <button type="button" key={category} aria-pressed={draft.category === category} className={draft.category === category ? 'chosen' : ''} onClick={() => setDraft((old) => ({ ...old, category }))}>{renderCategoryIcon(category)}{category}</button>)}</div>
       </fieldset>
@@ -39,6 +49,6 @@ export default function FilterSheet({ value, categories, renderCategoryIcon, dis
       <fieldset><legend>Графік</legend><label className="sheet-check"><span>Відкрито зараз</span><input type="checkbox" checked={draft.onlyOpen} onChange={(e) => setDraft((old) => ({ ...old, onlyOpen: e.target.checked }))} /></label></fieldset>
       <p className="sheet-help" role="status" aria-live="polite">{unavailable ? 'Зачекайте завантаження каталогу.' : count === 0 ? 'За цими умовами немає закладів. Приберіть один із фільтрів.' : `Знайдено закладів: ${count}`}</p>
     </div>
-    <footer className="filter-sheet-footer"><button type="button" className="menu-btn" onClick={() => { setDraft(emptyFilters()); setDistrictQuery('') }}>Скинути</button><button type="button" className="book" disabled={unavailable} onClick={() => onApply(draft)}>{unavailable ? 'Завантаження…' : `Показати заклади · ${count}`}</button></footer>
+    <footer className="filter-sheet-footer"><button type="button" className="menu-btn" onClick={() => { setDraft(emptyFilters()); setDistrictQuery(''); setSort('default') }}>Скинути</button><button type="button" className="book" disabled={unavailable || sortingPending} onClick={() => onApply(draft, sort)}>{sortingPending ? 'Шукаємо вас…' : unavailable ? 'Завантаження…' : `Показати заклади · ${count}`}</button></footer>
   </dialog>
 }
