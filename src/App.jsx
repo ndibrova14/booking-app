@@ -241,6 +241,7 @@ function PlaceCard({ place, onBook, onDetails, favorites }) {
 
 function AppContent() {
   const favorites = useFavorites()
+  const catalogSearch = useRef(null)
   const [onlyFavorites, setOnlyFavorites] = useState(false)
   const [places, setPlaces] = useState([])
   const [loading, setLoading] = useState(true)
@@ -472,7 +473,10 @@ function AppContent() {
   if (screen === 'cabinet') return <Suspense fallback={<PageLoading onClose={() => setScreen('catalog')} />}><Cabinet onBack={() => setScreen('catalog')} onPlaceSaved={(updated) => setPlaces((old) => old.map((p) => p.id === updated.id ? { ...p, ...updated } : p))} /></Suspense>
   
   return (
-    <div className={view === 'map' ? 'app catalog-app map-mode' : 'app catalog-app'}>
+    <div className={view === 'map' ? 'app catalog-app map-mode' : 'app catalog-app'} onPointerDownCapture={(event) => {
+      const input = catalogSearch.current
+      if (input && document.activeElement === input && !input.contains(event.target)) input.blur()
+    }}>
       <div className="brand-row"><span className="brand-mark"><CatalogIcon name="Ресторани" /></span><strong>Поїмо</strong></div>
          <div className="topbar">
         <div className="catalog-title"><p className="city-label"><LocationIcon />Київ</p><h1><span className="headline-word">{onlyFavorites ? 'Обране' : 'Де поїмо?'}</span> {!onlyFavorites && <span className="greeting" aria-hidden="true">👋</span>}</h1></div>
@@ -489,13 +493,17 @@ function AppContent() {
       {onlyFavorites && favorites.enabled && !favorites.loading && !favorites.error && <p className="booking-note favorites-hint">Збережені заклади. Пошук і фільтри також застосовуються до обраного.</p>}
 
       {view === 'map' && <div className="map-mode-title"><strong>{onlyFavorites ? 'Обране на карті' : 'Заклади на карті'}</strong></div>}
-      <div className="search-wrap"><UiIcon name="search" /><input
+      <form className="search-wrap" role="search" onSubmit={(event) => { event.preventDefault(); catalogSearch.current?.blur() }}><UiIcon name="search" /><input
+        ref={catalogSearch}
+        type="search"
+        enterKeyHint="search"
         className="search"
         aria-label="Пошук закладу за назвою"
         placeholder="Пошук за назвою"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-      /></div>
+        onKeyDown={(event) => { if (event.key === 'Enter' && !event.nativeEvent.isComposing) { event.preventDefault(); event.currentTarget.blur() } }}
+      /></form>
 
       {filterChips.length > 0 && <div className="selected-filters" aria-label="Обрані фільтри">{filterChips.map((chip) => <button type="button" key={chip.key} aria-label={`Прибрати фільтр: ${chip.label}`} onClick={chip.remove}>{chip.label}<span aria-hidden="true">×</span></button>)}</div>}
       {filtersOpen && <Suspense fallback={<OverlayLoading onClose={() => setFiltersOpen(false)} />}><FilterSheet value={filters} sortValue={me ? 'near' : 'default'} sortingPending={locating} categories={CATEGORIES} renderCategoryIcon={(name) => <CatalogIcon name={name} />} districts={districtOptions} cuisines={cuisineOptions}
