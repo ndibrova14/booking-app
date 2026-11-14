@@ -137,6 +137,49 @@ function UiIcon({ name }) {
   return <svg className="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>
 }
 
+function BookingDialog({ onClose, sending, children }) {
+  const dialog = useRef(null)
+  useEffect(() => {
+    const node = dialog.current
+    const previousFocus = document.activeElement
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    node.showModal()
+    return () => {
+      node.close()
+      document.body.style.overflow = previousOverflow
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus()
+    }
+  }, [])
+  function keepFocus(event) {
+    if (event.key !== 'Tab') return
+    const fields = [...dialog.current.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])')]
+      .filter((node) => node.getClientRects().length > 0 && node.tabIndex >= 0)
+    const first = fields[0]
+    const last = fields.at(-1)
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
+  }
+  return <dialog ref={dialog} className="booking-dialog" aria-labelledby="booking-title" onKeyDown={keepFocus}
+    onCancel={(event) => { event.preventDefault(); if (!sending) onClose() }}
+    onClick={(event) => { if (event.target === dialog.current && !sending) onClose() }}>
+    <div className="modal">{children}</div>
+  </dialog>
+}
+
+function BottomNav({ active, onNavigate }) {
+  return <nav className="bottom-nav" aria-label="Основна навігація">
+    {[
+      ['home', 'Головна', <UiIcon key="home" name="home" />],
+      ['map', 'Карта', <LocationIcon key="map" />],
+      ['favorites', 'Обране', <HeartIcon key="favorites" />],
+      ['bookings', 'Бронювання', <UiIcon key="bookings" name="calendar" />],
+      ['filters', 'Фільтри', <UiIcon key="filters" name="more" />],
+    ].map(([id, label, icon]) => <button key={id} type="button" className={active === id ? 'active' : ''}
+      aria-current={active === id ? 'page' : undefined} onClick={() => onNavigate(id)}>{icon}<span>{label}</span></button>)}
+  </nav>
+}
+
 function PlaceCard({ place, onBook, onDetails, favorites }) {
   const [failedPhoto, setFailedPhoto] = useState(null)
   const open = isOpenNow(place.hours)
@@ -412,7 +455,17 @@ function AppContent() {
       setSending(false)
     }
   }
-  if (screen === 'my-bookings') return <Suspense fallback={<PageLoading onClose={() => setScreen('catalog')} />}><MyBookings onBack={() => setScreen('catalog')} /></Suspense>
+  function navigate(section) {
+    if (section === 'bookings') { setScreen('my-bookings'); return }
+    setScreen('catalog')
+    if (section === 'home') { setView('list'); setOnlyFavorites(false) }
+    if (section === 'map') setView('map')
+    if (section === 'favorites') { setView('list'); setOnlyFavorites(true) }
+    if (section === 'filters') setFiltersOpen(true)
+  }
+  const activeNav = screen === 'my-bookings' ? 'bookings' : view === 'map' ? 'map' : onlyFavorites ? 'favorites' : 'home'
+  const navigation = <BottomNav active={activeNav} onNavigate={navigate} />
+  if (screen === 'my-bookings') return <div className="guest-section"><Suspense fallback={<PageLoading onClose={() => setScreen('catalog')} />}><MyBookings onBack={() => setScreen('catalog')} /></Suspense>{navigation}</div>
   if (screen === 'cabinet') return <Suspense fallback={<PageLoading onClose={() => setScreen('catalog')} />}><Cabinet onBack={() => setScreen('catalog')} onPlaceSaved={(updated) => setPlaces((old) => old.map((p) => p.id === updated.id ? { ...p, ...updated } : p))} /></Suspense>
   
   return (
@@ -510,19 +563,12 @@ function AppContent() {
         </InteractiveMap></Suspense>
       )}
 
-      <nav className="bottom-nav" aria-label="Основна навігація">
-        <button type="button" className={view === 'list' && !onlyFavorites ? 'active' : ''} onClick={() => { setView('list'); setOnlyFavorites(false) }}><UiIcon name="home" /><span>Головна</span></button>
-        <button type="button" className={view === 'map' ? 'active' : ''} onClick={() => setView('map')}><LocationIcon /><span>Карта</span></button>
-        <button type="button" className={onlyFavorites && view === 'list' ? 'active' : ''} onClick={() => { setView('list'); setOnlyFavorites(true) }}><HeartIcon /><span>Обране</span></button>
-        <button type="button" onClick={() => setScreen('my-bookings')}><UiIcon name="calendar" /><span>Бронювання</span></button>
-        <button type="button" onClick={() => setFiltersOpen(true)}><UiIcon name="more" /><span>Фільтри</span></button>
-      </nav>
+      {navigation}
       {detailPlace && <Suspense fallback={<OverlayLoading onClose={() => setDetailPlace(null)} />}><PlaceDetails key={detailPlace.id} place={detailPlace} open={isOpenNow(detailPlace.hours)} favorites={favorites} openLink={openMenu} renderHeart={(filled) => <HeartIcon filled={filled} />} onClose={() => setDetailPlace(null)} onBook={(place) => { setDetailPlace(null); openBooking(place) }} /></Suspense>}
       {selected && (
-        <div className="overlay" onClick={closeModal}>
-          <div className="modal" role="dialog" aria-modal="true" aria-label={selected.name} onClick={(e) => e.stopPropagation()}>
+        <BookingDialog onClose={closeModal} sending={sending}>
             <button type="button" className="modal-close" onClick={closeModal} aria-label="Закрити форму">✕</button>
-            <h2>{selected.name}</h2>
+            <h2 id="booking-title">{selected.name}</h2>
             {sent ? (
               <>
                 <p>{delivery === 'sent' ? 'Заявку збережено й передано закладу. Очікуйте підтвердження в Telegram.' : delivery === 'skipped' ? 'Заявку збережено. Перевірте її актуальний статус у «Моїх бронюваннях».' : ['queued', 'retrying', 'sending'].includes(delivery) ? 'Заявку збережено. Повідомлення закладу ще доставляється — повторювати заявку не потрібно. Очікуйте підтвердження в Telegram.' : 'Заявку збережено, але доставку повідомлення закладу не підтверджено. Не створюйте повторну заявку; зв’яжіться із закладом.'}</p>
@@ -563,8 +609,7 @@ function AppContent() {
                 </button>
               </form>
             )}
-          </div>
-        </div>
+        </BookingDialog>
       )}
     </div>
   )
