@@ -417,3 +417,73 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 @media (prefers-reduced-motion: reduce) {
   .catalog-app *, .catalog-app *::before, .catalog-app *::after { scroll-behavior: auto; transition: none; }
 }
+
+/* Match the approved compact reference composition. */
+.ui-icon { width: 20px; height: 20px; flex: none; }
+.catalog-app { padding: 14px 16px calc(88px + env(safe-area-inset-bottom)); }
+.brand-row { display: flex; align-items: center; gap: 9px; margin-bottom: 18px; }
+.brand-row strong { font-size: 25px; letter-spacing: -1px; font-weight: 800; }
+.brand-mark { display: grid; place-items: center; width: 38px; height: 38px; background: #ff4d00; color: white; border-radius: 12px; }
+.brand-mark .catalog-icon { width: 24px; height: 24px; }
+.catalog-app .topbar { margin-bottom: 17px; }
+.catalog-app .city-label { font-size: 12px; gap: 3px; }
+.catalog-app .city-label .location-icon { width: 14px; height: 14px; color: var(--text); }
+.catalog-app .catalog-title h1 { margin-top: 3px; font-size: 29px; line-height: 1.2; letter-spacing: -1px; }
+.headline-word { position: relative; font-family: Georgia, serif; }
+.headline-word::after { content: ''; position: absolute; bottom: -5px; right: -7px; width: 66px; height: 3px; background: #ff4d00; border-radius: 50%; transform: rotate(-5deg); }
+.greeting { font-size: 23px; }
+.catalog-app .cab-btn { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 6px 12px; font-size: 12px; border-radius: 20px; box-shadow: 0 2px 4px #0000000d; }
+.catalog-app .cab-btn .ui-icon { width: 16px; height: 16px; }
+.catalog-app .my-bookings-link { min-height: 44px; padding: 9px 14px; border-radius: 15px; margin-bottom: 12px; box-shadow: 0 2px 4px #0000000c; color: #e83c00; font-size: 13px; }
+.catalog-app .my-bookings-link .bookings-label { display: flex; align-items: center; gap: 10px; color: inherit; font-size: inherit; }
+.catalog-app .collection-tabs { gap: 8px; margin-bottom: 10px; border: 0; }
+.catalog-app .collection-tabs button { min-height: 44px; margin: 0; padding: 8px; border: 1px solid var(--line); border-radius: 15px; font-size: 13px; color: var(--text); box-shadow: 0 2px 4px #0000000b; }
+.catalog-app .collection-tabs button.active { background: #ff4d00; border-color: #eb4700; color: white; }
+.search-wrap { position: relative; }
+.search-wrap > .ui-icon { position: absolute; top: 50%; left: 13px; transform: translateY(-50%); width: 17px; height: 17px; color: var(--hint); pointer-events: none; }
+.catalog-app .search { min-height: 40px; padding: 9px 12px 9px 39px; font-size: 14px; border-radius: 14px; box-shadow: 0 1px 3px #00000009; }
+.catalog-app .catalog-filter-toolbar { margin: 8px 0; }
+.catalog-app .catalog-filter-toolbar .chip { min-height: 40px; padding: 7px; border-radius: 14px; font-size: 12px; box-shadow: 0 2px 4px #00000009; }
+.catalog-app .catalog-sort { margin: 5px 0; gap: 12px; font-size: 12px; }
+.catalog-app .catalog-sort select { min-height: 36px; padding: 5px 9px; font-size: 12px; border-radius: 11px; }
+.catalog-app .results-bar { margin: 5px 0 10px; }
+.catalog-app .results-bar p { font-size: 12px; }
+.catalog-app .tabs { margin-bottom: 16px; border-radius: 16px; padding: 2px; background: #f2f2f2; }
+.catalog-app .tab { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 40px; padding: 7px; font-size: 13px; border-radius: 14px; }
+.catalog-app .tab.active { color: var(--text); box-shadow: 0 2px 4px #00000016; }
+.catalog-app .tab.active .ui-icon { color: #ff4d00; }
+.catalog-app .place-card { position: relative; border-radius: 19px; margin-bottom: 16px; box-shadow: 0 2px 8px #0000000a; }
+.catalog-app .place-photo-link { padding: 0; }
+.catalog-app .place-card .photo { aspect-ratio: 2.5 / 1; border-radius: 18px; }
+.catalog-app .place-card .card-body { padding: 9px 10px 11px; }
+.catalog-app .place-heading h3 { font-size: 19px; letter-spacing: -.55px; }
+.catalog-app .has-photo .favorite-button { position: absolute; right: 9px; top: 9px; margin: 0; background: #20202066; color: #fff; border-color: #ffffff66; backdrop-filter: blur(4px); }
+.catalog-app .has-photo .favorite-button.saved { color: #ff7040; background: #fff; }
+.catalog-app .has-photo .place-title-row .badge { position: absolute; top: 12px; left: 10px; margin: 0; padding: 5px 9px; font-size: 10px; background: #fff; color: #222; box-shadow: 0 1px 5px #00000012; }
+.catalog-app .has-photo .badge.open::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: #26a84a; }
+.catalog-app .place-card .place-cuisine { margin: 4px 0 0; font-size: 12px; }
+.catalog-app .place-location { margin-top: 6px; }
+.catalog-app .place-location p { font-size: 11px; }
+.catalog-app .place-schedule { margin-top: 3px; }
+.catalog-app .place-hours { font-size: 11px; }
+.catalog-app .pet-friendly-label { margin-top: 5px; font-size: 11px; }
+.catalog-app .place-details-link { min-height: 32px; padding: 5px 0; margin: 0; font-size: 11px; }
+.catalog-app .place-card .actions { padding-top: 0; border: 0; margin-top: 6px; gap: 7px; }
+.catalog-app .place-card .book { display: flex; align-items: center; justify-content: center; gap: 7px; background: #ff4d00; font-size: 12px; padding: 10px 8px; min-height: 42px; border: 1px solid #e44300; border-radius: 14px; }
+.catalog-app .place-card .book .ui-icon { width: 17px; height: 17px; }
+.catalog-app .place-card .menu-btn { min-height: 42px; padding: 8px; font-size: 12px; }
+.route-button { display: grid; place-items: center; min-width: 44px; min-height: 44px; padding: 9px; border: 1px solid var(--line); border-radius: 14px; color: #ff4d00; background: var(--card); box-shadow: 0 2px 3px #00000008; cursor: pointer; }
+.bottom-nav { position: fixed; z-index: 800; bottom: 0; left: 50%; transform: translateX(-50%); width: min(100%, 520px); display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); padding: 7px 8px max(9px, env(safe-area-inset-bottom)); background: var(--card); border-top: 1px solid var(--line); box-shadow: 0 -3px 12px #00000005; }
+.bottom-nav button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-width: 0; min-height: 48px; padding: 3px 0; border: 0; background: none; color: var(--hint); cursor: pointer; }
+.bottom-nav button span { font-size: 10px; }
+.bottom-nav .ui-icon, .bottom-nav .location-icon, .bottom-nav .heart-icon { width: 21px; height: 21px; }
+.bottom-nav button.active { color: #ff4d00; }
+.map-mode > .brand-row { display: none; }
+.catalog-app.map-mode { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+:root[data-theme='dark'] .catalog-app .tabs { background: #303030; }
+@media (max-width: 350px) {
+  .catalog-app { padding-left: 12px; padding-right: 12px; }
+  .catalog-app .catalog-title h1 { font-size: 26px; }
+  .catalog-app .place-card .book { font-size: 11px; }
+  .catalog-app .place-card .menu-btn { padding: 6px; }
+}

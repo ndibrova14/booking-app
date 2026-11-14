@@ -122,14 +122,30 @@ function HeartIcon({ filled = false }) {
   return <svg viewBox="0 0 24 24" className="heart-icon" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" /></svg>
 }
 
+function UiIcon({ name }) {
+  const paths = {
+    calendar: <><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18"/></>,
+    home: <><path d="m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9"/></>,
+    list: <><path d="M9 6h12M9 12h12M9 18h12M3 6h1M3 12h1M3 18h1"/></>,
+    map: <><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2ZM9 3v16M15 5v16"/></>,
+    user: <><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></>,
+    route: <path d="m21 3-7 18-3-8-8-3Z"/>,
+    more: <path d="M4 6h16M4 12h16M4 18h16"/>,
+    search: <><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></>,
+    serve: <><path d="M3 18h18M5 16a7 7 0 0 1 14 0M12 7V5M10 5h4M2 21h20"/></>,
+  }
+  return <svg className="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>
+}
+
 function PlaceCard({ place, onBook, onDetails, favorites }) {
   const [failedPhoto, setFailedPhoto] = useState(null)
   const open = isOpenNow(place.hours)
-  const statusText = open === null ? '' : open ? 'Відкрито' : 'Зачинено'
+  const statusText = open === null ? '' : open ? 'Відкрито зараз' : 'Зачинено'
   const hasMenu = /^https?:\/\//i.test(place.menu_url || '')
+  const hasPhoto = Boolean(place.photo_url && failedPhoto !== place.photo_url)
   return (
-    <article className="card place-card">
-      {place.photo_url && failedPhoto !== place.photo_url && (
+    <article className={hasPhoto ? "card place-card has-photo" : "card place-card"}>
+      {hasPhoto && (
         <button type="button" className="place-photo-link" aria-label={`Детальніше про заклад: ${place.name}`} onClick={() => onDetails(place)}>
           <img className="photo" src={place.photo_url} alt="" loading="lazy" onError={() => setFailedPhoto(place.photo_url)} />
         </button>
@@ -168,9 +184,8 @@ function PlaceCard({ place, onBook, onDetails, favorites }) {
               Меню
             </button>
           )}
-          <button className="book" onClick={() => onBook(place)}>
-            Забронювати
-          </button>
+          <button className="book" onClick={() => onBook(place)}><UiIcon name="calendar" />Забронювати столик</button>
+          {coordinates(place) && <button type="button" className="route-button" aria-label={`Маршрут до ${place.name}`} onClick={() => openMenu(routeUrl(place))}><UiIcon name="route" /></button>}
         </div>
       </div>
     </article>
@@ -402,19 +417,20 @@ function AppContent() {
   
   return (
     <div className={view === 'map' ? 'app catalog-app map-mode' : 'app catalog-app'}>
+      <div className="brand-row"><span className="brand-mark"><CatalogIcon name="Ресторани" /></span><strong>Поїмо</strong></div>
          <div className="topbar">
-        <div className="catalog-title"><p className="city-label"><LocationIcon />Київ</p><h1>Де поїмо<span className="title-accent">?</span></h1></div>
+        <div className="catalog-title"><p className="city-label"><LocationIcon />Київ</p><h1><span className="headline-word">Де поїмо?</span> <span className="greeting" aria-hidden="true">👋</span></h1></div>
         {isAdmin && (
           <button className="cab-btn" onClick={() => setScreen('cabinet')}>
-            Кабінет
+            <UiIcon name="user" />Кабінет
           </button>
         )}
       </div>
 
-      <button className="my-bookings-link" onClick={() => setScreen("my-bookings")}>Мої бронювання <span aria-hidden="true">→</span></button>
+      <button className="my-bookings-link" onClick={() => setScreen("my-bookings")}><span className="bookings-label"><UiIcon name="calendar" />Мої бронювання</span><span aria-hidden="true">→</span></button>
 
       <div className="collection-tabs" role="group" aria-label="Колекція закладів">
-        <button className={!onlyFavorites ? 'active' : ''} aria-pressed={!onlyFavorites} onClick={() => setOnlyFavorites(false)}>Усі заклади</button>
+        <button className={!onlyFavorites ? 'active' : ''} aria-pressed={!onlyFavorites} onClick={() => setOnlyFavorites(false)}><UiIcon name="serve" />Усі заклади</button>
         <button className={onlyFavorites ? 'active' : ''} aria-pressed={onlyFavorites} onClick={() => setOnlyFavorites(true)}><HeartIcon filled={onlyFavorites} />Обране{!favorites.loading && !favorites.error && favorites.enabled ? ` · ${places.filter((p) => favorites.ids.includes(String(p.id))).length}` : ''}</button>
       </div>
       {favorites.loading && <p className="booking-note" role="status">Завантажуємо обране…</p>}
@@ -423,13 +439,13 @@ function AppContent() {
       {onlyFavorites && favorites.enabled && !favorites.loading && !favorites.error && <p className="booking-note favorites-hint">Збережені заклади. Пошук і фільтри також застосовуються до обраного.</p>}
 
       {view === 'map' && <div className="map-mode-title"><strong>{onlyFavorites ? 'Обране на карті' : 'Заклади на карті'}</strong><span>Знайдено: {visible.length}</span></div>}
-      <input
+      <div className="search-wrap"><UiIcon name="search" /><input
         className="search"
         aria-label="Пошук закладу за назвою"
         placeholder="Пошук за назвою"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-      />
+      /></div>
 
       <div className="catalog-filter-toolbar">
         <button type="button" aria-pressed={filters.onlyOpen} className={filters.onlyOpen ? 'chip active' : 'chip'} onClick={() => setFilters((old) => ({ ...old, onlyOpen: !old.onlyOpen }))}><CatalogIcon name="clock" />Відкрито зараз</button>
@@ -459,13 +475,13 @@ function AppContent() {
           className={view === 'list' ? 'tab active' : 'tab'}
           onClick={() => setView('list')}
         >
-          Список
+          <UiIcon name="list" />Список
         </button>
         <button
           className={view === 'map' ? 'tab active' : 'tab'}
           onClick={() => setView('map')}
         >
-          Карта
+          <UiIcon name="map" />Карта
         </button>
       </div>
 
@@ -494,6 +510,13 @@ function AppContent() {
         </InteractiveMap></Suspense>
       )}
 
+      <nav className="bottom-nav" aria-label="Основна навігація">
+        <button type="button" className={view === 'list' && !onlyFavorites ? 'active' : ''} onClick={() => { setView('list'); setOnlyFavorites(false) }}><UiIcon name="home" /><span>Головна</span></button>
+        <button type="button" className={view === 'map' ? 'active' : ''} onClick={() => setView('map')}><LocationIcon /><span>Карта</span></button>
+        <button type="button" className={onlyFavorites && view === 'list' ? 'active' : ''} onClick={() => { setView('list'); setOnlyFavorites(true) }}><HeartIcon /><span>Обране</span></button>
+        <button type="button" onClick={() => setScreen('my-bookings')}><UiIcon name="calendar" /><span>Бронювання</span></button>
+        <button type="button" onClick={() => setFiltersOpen(true)}><UiIcon name="more" /><span>Фільтри</span></button>
+      </nav>
       {detailPlace && <Suspense fallback={<OverlayLoading onClose={() => setDetailPlace(null)} />}><PlaceDetails key={detailPlace.id} place={detailPlace} open={isOpenNow(detailPlace.hours)} favorites={favorites} openLink={openMenu} renderHeart={(filled) => <HeartIcon filled={filled} />} onClose={() => setDetailPlace(null)} onBook={(place) => { setDetailPlace(null); openBooking(place) }} /></Suspense>}
       {selected && (
         <div className="overlay" onClick={closeModal}>
