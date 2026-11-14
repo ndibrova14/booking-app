@@ -1,20 +1,21 @@
 :root {
-  --bg: #f7f2ec;
+  --bg: #ffffff;
   --card: #ffffff;
-  --text: #2b2420;
-  --hint: #8a7f76;
-  --accent: #c4553a;
+  --text: #202020;
+  --hint: #686868;
+  --accent: #c83b00;
+  --brand: #ff4d00;
   --accent-text: #ffffff;
-  --line: rgba(60, 40, 20, 0.14);
+  --line: #e8e8e8;
 }
 
 :root[data-theme='dark'] {
-  --bg: #1c1917;
-  --card: #2a2522;
-  --text: #f3ece6;
-  --hint: #a89d94;
-  --accent: #e0735a;
-  --accent-text: #1c1917;
+  --bg: #181818;
+  --card: #242424;
+  --text: #f5f5f5;
+  --hint: #b5b5b5;
+  --accent: #ff815b;
+  --accent-text: #181818;
   --line: rgba(255, 255, 255, 0.14);
 }
 
@@ -31,5 +32,8 @@ body {
 }
 
 h1, .card h3, .modal h2 {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: inherit;
 }
+/* Avoid horizontal layout panning; keep vertical scrolling and user zoom available. */
+html, body, #root { max-width: 100%; }
+html, body { overflow-x: clip; }

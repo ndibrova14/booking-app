@@ -157,8 +157,8 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .place-hours { font-size: 12px; color: var(--hint); }
 .place-card .actions { margin-top: 16px; }
 .place-card .book, .place-card .menu-btn { min-height: 46px; font-size: 14px; border-radius: 12px; padding: 11px 14px; }
-:root { --hint: #71665e; }
-:root[data-theme='dark'] { --hint: #b9ada4; }
+:root { --hint: #686868; }
+:root[data-theme='dark'] { --hint: #b5b5b5; }
 @media (max-width: 350px) {
   .catalog-title h1 { font-size: 25px; }
   .place-card .card-body { padding: 16px; }
@@ -370,3 +370,231 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .place-photo-link:focus-visible { outline: 3px solid var(--accent); outline-offset: -4px; }
 
 .delivery-status { margin: 10px 0; line-height: 1.5; }
+
+/* Minimal Orange catalog. Keep feature layouts and existing event handlers intact. */
+.catalog-app { padding: 20px 16px max(32px, env(safe-area-inset-bottom)); }
+.catalog-app .topbar { margin-bottom: 18px; }
+.catalog-app .city-label { display: flex; align-items: center; gap: 5px; color: var(--text); font-size: 13px; letter-spacing: 0; }
+.catalog-app .city-label .location-icon { color: var(--accent); }
+.catalog-app .catalog-title h1 { margin-top: 8px; font-size: 34px; font-weight: 750; letter-spacing: -1.2px; }
+.title-accent { color: var(--accent); }
+.catalog-app .cab-btn { border-radius: 12px; font-weight: 600; }
+.catalog-app .my-bookings-link { background: var(--card); border-color: var(--line); color: var(--text); margin-bottom: 18px; font-weight: 600; }
+.catalog-app .my-bookings-link span { color: var(--accent); font-size: 20px; }
+.catalog-app .collection-tabs { gap: 0; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+.catalog-app .collection-tabs button { border: 0; border-radius: 0; background: transparent; color: var(--hint); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.catalog-app .collection-tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+.catalog-app .search { min-height: 48px; background: var(--card); border-radius: 14px; }
+.catalog-app .catalog-filter-toolbar { margin-top: 10px; gap: 8px; }
+.catalog-app .catalog-filter-toolbar .chip { border-radius: 12px; }
+.catalog-app .catalog-filter-toolbar .chip.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.catalog-app .catalog-sort { margin: 12px 0; }
+.catalog-app .tabs { background: var(--line); padding: 4px; gap: 4px; border-radius: 13px; }
+.catalog-app .tab { border: 1px solid transparent; border-radius: 10px; font-weight: 600; }
+.catalog-app .tab.active { color: var(--accent); border-color: var(--line); box-shadow: 0 1px 3px #00000008; }
+.catalog-app .place-card { border-radius: 20px; box-shadow: 0 4px 18px #00000005; margin-bottom: 20px; }
+.catalog-app .place-card .photo { aspect-ratio: 16 / 9; }
+.catalog-app .place-card .card-body { padding: 16px; }
+.catalog-app .place-heading h3 { font-family: inherit; font-size: 22px; letter-spacing: -.5px; }
+.catalog-app .place-title-row { gap: 8px; }
+.catalog-app .place-title-row h3 { flex-basis: 150px; }
+.catalog-app .favorite-button { margin-top: -5px; }
+.catalog-app .place-title-row .badge { align-self: center; }
+.catalog-app .place-cuisine { font-size: 13px; margin-top: 4px; }
+.catalog-app .place-location { margin-top: 10px; }
+.catalog-app .place-schedule { margin-top: 6px; }
+.catalog-app .place-details-link { margin-top: 4px; }
+.catalog-app .place-card .actions { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 4px; gap: 10px; }
+.catalog-app .place-card .book { font-weight: 650; }
+.catalog-app .place-card .menu-btn { color: var(--text); border-color: var(--line); }
+.catalog-app button:focus-visible, .catalog-app select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.catalog-app.map-mode { padding: 10px 12px max(8px, env(safe-area-inset-bottom)); }
+@media (max-width: 350px) {
+  .catalog-app { padding-left: 12px; padding-right: 12px; }
+  .catalog-app .catalog-title h1 { font-size: 30px; }
+  .catalog-app .place-heading h3 { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .catalog-app *, .catalog-app *::before, .catalog-app *::after { scroll-behavior: auto; transition: none; }
+}
+
+/* Match the approved compact reference composition. */
+.ui-icon { width: 20px; height: 20px; flex: none; }
+.catalog-app { padding: 14px 16px calc(88px + env(safe-area-inset-bottom)); }
+.brand-row { display: flex; align-items: center; gap: 9px; margin-bottom: 18px; }
+.brand-row strong { font-size: 25px; letter-spacing: -1px; font-weight: 800; }
+.brand-mark { display: grid; place-items: center; width: 38px; height: 38px; background: #ff4d00; color: white; border-radius: 12px; }
+.brand-mark .catalog-icon { width: 24px; height: 24px; }
+.catalog-app .topbar { margin-bottom: 17px; }
+.catalog-app .city-label { font-size: 12px; gap: 3px; }
+.catalog-app .city-label .location-icon { width: 14px; height: 14px; color: var(--text); }
+.catalog-app .catalog-title h1 { margin-top: 3px; font-size: 29px; line-height: 1.2; letter-spacing: -1px; }
+.headline-word { position: relative; font-family: Georgia, serif; }
+.headline-word::after { content: ''; position: absolute; bottom: -5px; right: -7px; width: 66px; height: 3px; background: #ff4d00; border-radius: 50%; transform: rotate(-5deg); }
+.greeting { font-size: 23px; }
+.catalog-app .cab-btn { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 6px 12px; font-size: 12px; border-radius: 20px; box-shadow: 0 2px 4px #0000000d; }
+.catalog-app .cab-btn .ui-icon { width: 16px; height: 16px; }
+.catalog-app .my-bookings-link { min-height: 44px; padding: 9px 14px; border-radius: 15px; margin-bottom: 12px; box-shadow: 0 2px 4px #0000000c; color: var(--accent); font-size: 13px; }
+.catalog-app .my-bookings-link .bookings-label { display: flex; align-items: center; gap: 10px; color: inherit; font-size: inherit; }
+.catalog-app .collection-tabs { gap: 8px; margin-bottom: 10px; border: 0; }
+.catalog-app .collection-tabs button { min-height: 44px; margin: 0; padding: 8px; border: 1px solid var(--line); border-radius: 15px; font-size: 13px; color: var(--text); box-shadow: 0 2px 4px #0000000b; }
+.catalog-app .collection-tabs button.active { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.search-wrap { position: relative; }
+.search-wrap > .ui-icon { position: absolute; top: 50%; left: 13px; transform: translateY(-50%); width: 17px; height: 17px; color: var(--hint); pointer-events: none; }
+.catalog-app .search { min-height: 40px; padding: 9px 12px 9px 39px; font-size: 16px; border-radius: 14px; box-shadow: 0 1px 3px #00000009; }
+.catalog-app .catalog-filter-toolbar { margin: 8px 0; }
+.catalog-app .catalog-filter-toolbar .chip { min-height: 40px; padding: 7px; border-radius: 14px; font-size: 12px; box-shadow: 0 2px 4px #00000009; }
+.catalog-app .catalog-sort { margin: 5px 0; gap: 12px; font-size: 12px; }
+.catalog-app .catalog-sort select { min-height: 36px; padding: 5px 9px; font-size: 12px; border-radius: 11px; }
+.catalog-app .results-bar { margin: 5px 0 10px; }
+.catalog-app .results-bar p { font-size: 12px; }
+.catalog-app .tabs { margin-bottom: 16px; border-radius: 16px; padding: 2px; background: #f2f2f2; }
+.catalog-app .tab { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 40px; padding: 7px; font-size: 13px; border-radius: 14px; }
+.catalog-app .tab.active { color: var(--text); box-shadow: 0 2px 4px #00000016; }
+.catalog-app .tab.active .ui-icon { color: var(--accent); }
+.catalog-app .place-card { position: relative; border-radius: 19px; margin-bottom: 16px; box-shadow: 0 2px 8px #0000000a; }
+.catalog-app .place-photo-link { padding: 0; }
+.catalog-app .place-card .photo { aspect-ratio: 2.5 / 1; border-radius: 18px; }
+.catalog-app .place-card .card-body { padding: 9px 10px 11px; }
+.catalog-app .place-heading h3 { font-size: 19px; letter-spacing: -.55px; }
+.catalog-app .has-photo .favorite-button { position: absolute; right: 9px; top: 9px; margin: 0; background: #20202066; color: #fff; border-color: #ffffff66; backdrop-filter: blur(4px); }
+.catalog-app .has-photo .favorite-button.saved { color: var(--accent); background: #fff; }
+.catalog-app .has-photo .place-title-row .badge { position: absolute; top: 12px; left: 10px; margin: 0; padding: 5px 9px; font-size: 10px; background: #fff; color: #222; box-shadow: 0 1px 5px #00000012; }
+.catalog-app .has-photo .badge.open::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: #26a84a; }
+.catalog-app .place-card .place-cuisine { margin: 4px 0 0; font-size: 12px; }
+.catalog-app .place-location { margin-top: 6px; }
+.catalog-app .place-location p { font-size: 11px; }
+.catalog-app .place-schedule { margin-top: 3px; }
+.catalog-app .place-hours { font-size: 11px; }
+.catalog-app .pet-friendly-label { margin-top: 5px; font-size: 11px; }
+.catalog-app .place-details-link { min-height: 32px; padding: 5px 0; margin: 0; font-size: 11px; }
+.catalog-app .place-card .actions { padding-top: 0; border: 0; margin-top: 6px; gap: 7px; }
+.catalog-app .place-card .book { display: flex; align-items: center; justify-content: center; gap: 7px; background: var(--accent); font-size: 12px; padding: 10px 8px; min-height: 42px; border: 1px solid #e44300; border-radius: 14px; }
+.catalog-app .place-card .book .ui-icon { width: 17px; height: 17px; }
+.catalog-app .place-card .menu-btn { min-height: 42px; padding: 8px; font-size: 12px; }
+.route-button { display: grid; place-items: center; min-width: 44px; min-height: 44px; padding: 9px; border: 1px solid var(--line); border-radius: 14px; color: var(--accent); background: var(--card); box-shadow: 0 2px 3px #00000008; cursor: pointer; }
+.bottom-nav { position: fixed; z-index: 800; bottom: 0; left: 50%; transform: translateX(-50%); width: min(100%, 520px); display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); padding: 7px 8px max(9px, env(safe-area-inset-bottom)); background: var(--card); border-top: 1px solid var(--line); box-shadow: 0 -3px 12px #00000005; }
+.bottom-nav button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-width: 0; min-height: 48px; padding: 3px 0; border: 0; background: none; color: var(--hint); cursor: pointer; }
+.bottom-nav button span { font-size: 10px; }
+.bottom-nav .ui-icon, .bottom-nav .location-icon, .bottom-nav .heart-icon { width: 21px; height: 21px; }
+.bottom-nav button.active { color: var(--accent); }
+.map-mode > .brand-row { display: none; }
+.catalog-app.map-mode { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+:root[data-theme='dark'] .catalog-app .tabs { background: #303030; }
+@media (max-width: 350px) {
+  .catalog-app { padding-left: 12px; padding-right: 12px; }
+  .catalog-app .catalog-title h1 { font-size: 26px; }
+  .catalog-app .place-card .book { font-size: 11px; }
+  .catalog-app .place-card .menu-btn { padding: 6px; }
+}
+
+/* Audit fixes: native booking modal and persistent guest navigation. */
+.booking-dialog { position: fixed; inset: 0; width: 100%; max-width: none; height: 100dvh; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; color: var(--text); }
+.booking-dialog[open] { display: flex; align-items: flex-end; justify-content: center; }
+.booking-dialog::backdrop { background: #0008; }
+.booking-dialog .modal { margin: 0; }
+.guest-section > .app { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+.bottom-nav button:focus-visible, .booking-dialog button:focus-visible, .booking-dialog input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* One navigation surface: primary destinations live only in the bottom bar. */
+ .map-mode > .search-wrap { flex: none; }
+/* Keep the quick opening filter beside the result count in both list and map. */
+.catalog-app > .results-bar { display: block; margin: 8px 0 12px; }
+.results-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.results-summary > p { flex: none; }
+.open-now-switch { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; min-height: 44px; padding: 6px 0 6px 6px; border: 0; background: transparent; color: var(--text); font: inherit; font-size: 12px; cursor: pointer; }
+.switch-track { display: block; position: relative; width: 36px; height: 22px; flex: none; border: 1px solid var(--hint); border-radius: 999px; background: var(--card); }
+.switch-track > span { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--hint); }
+.open-now-switch[aria-checked='true'] .switch-track { border-color: var(--accent); background: var(--accent); }
+.open-now-switch[aria-checked='true'] .switch-track > span { transform: translateX(14px); background: var(--accent-text); }
+.results-bar > .reset-filters { margin-top: 4px; }
+.map-mode > .results-bar { flex: none; }
+
+.sheet-sort { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.sheet-sort .sheet-help { margin: 0; }
+.sheet-sort select { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--text); font: inherit; font-size: 16px; }
+.sheet-sort select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Minimal Orange: venue details and guest bookings. */
+.screen-icon { width: 20px; height: 20px; flex: none; }
+.venue-page { width: min(100%, 560px); background: var(--card); }
+.venue-hero { position: relative; }
+.venue-page .place-details-toolbar { position: fixed; z-index: 2; top: 0; left: 50%; right: auto; width: min(100%, 560px); transform: translateX(-50%); padding: max(12px, env(safe-area-inset-top)) 14px 12px; border: 0; background: none; pointer-events: none; }
+.venue-page .place-details-toolbar button { pointer-events: auto; min-width: 44px; min-height: 44px; padding: 10px; border-radius: 999px; background: var(--card); color: var(--text); box-shadow: 0 2px 12px #0002; }
+.venue-page .place-details-toolbar button.saved { color: var(--accent); }
+.venue-page .place-details-toolbar button:first-child { padding-right: 15px; font-size: 13px; }
+.venue-page .venue-gallery-track { gap: 8px; }
+.venue-page .venue-gallery-track img { aspect-ratio: 16 / 10; }
+.venue-gallery-hint { position: absolute; bottom: 12px; right: 14px; padding: 6px 10px; border-radius: 999px; background: #202020cc; color: white !important; font-size: 12px; pointer-events: none; }
+.venue-photo-empty { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; aspect-ratio: 16 / 9; min-height: 180px; background: var(--bg); color: var(--hint); border-bottom: 1px solid var(--line); font-size: 13px; }
+.venue-photo-empty .screen-icon { width: 44px; height: 44px; }
+.venue-page .place-details-body { padding: 22px 20px 28px; }
+.venue-page h1 { font-family: inherit; font-size: 30px; font-weight: 750; letter-spacing: -.9px; }
+.venue-page .venue-eyebrow { margin-bottom: 6px; font-size: 12px; }
+.venue-page .venue-cuisine { margin-top: 6px; font-size: 14px; }
+.venue-page .venue-status-row { margin-top: 12px; font-size: 13px; }
+.venue-page .badge.open { background: #edf8f0; color: #196334; }
+.venue-quick-actions { display: grid; grid-template-columns: repeat(auto-fit,minmax(120px,1fr)); gap: 10px; margin-top: 18px; }
+.venue-quick-actions button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
+.venue-quick-actions button .screen-icon, .venue-quick-actions button > span { color: var(--accent); }
+.venue-page .venue-section { margin-top: 22px; padding-top: 20px; }
+.venue-page .venue-section h2 { font-size: 17px; letter-spacing: -.3px; }
+.venue-page .venue-section p { font-size: 14px; line-height: 1.65; }
+.venue-facts { display: flex; flex-direction: column; gap: 16px; }
+.venue-facts > div { display: flex; align-items: flex-start; gap: 12px; }
+.venue-facts > div > .screen-icon { color: var(--accent); margin-top: 3px; }
+.venue-facts .fact-label { color: var(--hint); font-size: 12px; }
+.venue-page .venue-facts p { margin: 3px 0 0; line-height: 1.45; }
+.venue-facts small { display: block; margin-top: 5px; font-size: 12px; color: var(--hint); }
+.venue-page .venue-amenities li { display: flex; align-items: center; gap: 6px; padding: 8px 11px; border-radius: 999px; font-size: 12px; }
+.venue-amenities .screen-icon { width: 15px; height: 15px; color: var(--accent); }
+.venue-page .place-details-footer { box-shadow: 0 -4px 16px #00000005; }
+.venue-page .place-details-footer p { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; }
+.venue-page .place-details-footer p .screen-icon { width: 15px; height: 15px; }
+.venue-page .place-details-footer .book { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 48px; border-radius: 14px; font-size: 15px; }
+.my-bookings { padding-top: 24px; }
+.bookings-page-header { margin-bottom: 22px; }
+.bookings-eyebrow { margin: 0 0 8px; font-size: 12px; color: var(--hint); }
+.my-bookings .topbar { gap: 12px; margin-bottom: 6px; }
+.my-bookings h1 { margin: 0; font-size: 28px; letter-spacing: -.9px; }
+.bookings-subtitle { margin: 0; font-size: 13px; line-height: 1.5; color: var(--hint); }
+.refresh-bookings { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border: 1px solid var(--line); border-radius: 14px; background: var(--card); color: var(--text); cursor: pointer; }
+.my-bookings .guest-booking-card { margin-bottom: 16px; border-radius: 20px; box-shadow: 0 3px 12px #00000005; }
+.my-bookings .guest-booking-card .card-body { padding: 18px; }
+.booking-card-heading { display: flex; align-items: flex-start; gap: 12px; }
+.booking-card-heading > div { min-width: 0; flex: 1; }
+.booking-symbol, .booking-empty-symbol { display: grid; place-items: center; flex: none; width: 48px; height: 48px; border: 1px solid var(--line); border-radius: 15px; background: var(--bg); color: var(--accent); }
+.booking-card-heading .badge { display: inline-block; max-width: 100%; padding: 4px 8px; font-size: 11px; line-height: 1.4; }
+.my-bookings .badge.st-new { background: #fff1e8; color: #993400; }
+.my-bookings .badge.st-confirmed { background: #edf8f0; color: #196334; }
+.my-bookings .badge.st-cancelled, .my-bookings .badge.st-rejected { background: var(--bg); color: var(--hint); }
+.my-bookings .guest-booking-card h2 { margin: 8px 0 3px; font-size: 19px; letter-spacing: -.5px; line-height: 1.25; overflow-wrap: anywhere; }
+.booking-city { color: var(--hint); font-size: 12px; }
+.booking-summary { display: grid; grid-template-columns: 1.4fr 1fr .8fr; gap: 10px; margin: 16px 0 12px; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.booking-summary > div { min-width: 0; }
+.booking-summary dt { display: flex; align-items: center; gap: 5px; margin-bottom: 7px; color: var(--hint); font-size: 12px; }
+.booking-summary dt .screen-icon { width: 15px; height: 15px; }
+.booking-summary dd { margin: 0; font-size: 14px; font-weight: 650; overflow-wrap: anywhere; }
+.my-bookings .booking-note { font-size: 12px; line-height: 1.6; }
+.my-bookings .cancel-booking { min-height: 44px; margin-top: 14px; padding: 9px 0; border: 0; background: none; color: var(--hint); font-size: 13px; font-weight: 500; text-decoration: underline; text-underline-offset: 4px; }
+.my-bookings .cancel-booking:disabled { text-decoration: none; }
+.my-bookings .cancel-confirm p { margin-top: 0; font-size: 14px; font-weight: 600; }
+.my-bookings .cancel-confirm .actions { flex-wrap: wrap; }
+.my-bookings .cancel-confirm .actions > button { flex: 1 1 110px; min-height: 44px; font-size: 13px; padding: 10px; }
+.cancel-confirm-button { border: 0; border-radius: 12px; background: #b42318; color: white; font-weight: 600; cursor: pointer; }
+.cancel-confirm-button:disabled { opacity: .6; }
+.bookings-empty { display: flex; flex-direction: column; align-items: center; padding: 32px 20px; margin: 20px 0; border: 1px solid var(--line); border-radius: 22px; background: var(--card); text-align: center; }
+.booking-empty-symbol { width: 68px; height: 68px; border-radius: 21px; }
+.booking-empty-symbol .screen-icon { width: 30px; height: 30px; }
+.my-bookings .bookings-empty h2 { margin: 20px 0 8px; font-size: 22px; letter-spacing: -.6px; }
+.bookings-empty p { margin: 0; max-width: 280px; color: var(--hint); font-size: 14px; line-height: 1.6; }
+.bookings-empty .book { width: auto; min-width: 180px; min-height: 46px; margin-top: 22px; font-size: 14px; }
+.bookings-feedback, .bookings-demo-note { padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; font-size: 13px; line-height: 1.6; }
+.bookings-feedback.error { border-left: 3px solid #b42318; }
+.bookings-feedback.error p { margin-top: 0; }
+.bookings-feedback.error .menu-btn { min-height: 44px; font-size: 13px; }
+.bookings-demo-note { color: var(--hint); background: var(--card); }
+.my-bookings button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+:root[data-theme='dark'] .venue-page .badge.open, :root[data-theme='dark'] .my-bookings .badge.st-confirmed { background: #193725; color: #a8e6b9; }
+:root[data-theme='dark'] .my-bookings .badge.st-new { background: #3b281f; color: #ffc19d; }
+@media (max-width: 350px) { .my-bookings h1 { font-size: 25px; } .my-bookings .guest-booking-card .card-body { padding: 14px; } .booking-summary { gap: 6px; } .booking-summary dd { font-size: 13px; } .venue-page .place-details-body { padding: 20px 16px; } }

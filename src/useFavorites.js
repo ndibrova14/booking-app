@@ -9,15 +9,16 @@ async function request(body, signal) {
   return response.json()
 }
 export default function useFavorites() {
-  const enabled = Boolean(window.Telegram?.WebApp?.initData)
+  const isPreview = import.meta.env.VITE_DESIGN_PREVIEW === 'true'
+  const enabled = isPreview || Boolean(window.Telegram?.WebApp?.initData)
   const [ids, setIds] = useState([])
-  const [loading, setLoading] = useState(enabled)
+  const [loading, setLoading] = useState(enabled && !isPreview)
   const [error, setError] = useState('')
   const [busyIds, setBusyIds] = useState([])
   const locks = useRef(new Set())
   const [reload, setReload] = useState(0)
   useEffect(() => {
-    if (!enabled) return
+    if (!enabled || isPreview) return
     const controller = new AbortController()
     async function load() {
       setLoading(true)
@@ -36,9 +37,14 @@ export default function useFavorites() {
     }
     load()
     return () => controller.abort()
-  }, [enabled, reload])
+  }, [enabled, reload, isPreview])
   const retry = useCallback(() => setReload((n) => n + 1), [])
   async function toggle(placeId) {
+    if (isPreview) {
+      const key = String(placeId)
+      setIds((old) => old.includes(key) ? old.filter((id) => id !== key) : [...old, key])
+      return
+    }
     if (!enabled) { setError('Відкрийте «Поїмо» через Telegram, щоб зберігати обране.'); return }
     const key = String(placeId)
     if (loading || error || locks.current.has(key)) return

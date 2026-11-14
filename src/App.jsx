@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense, Component } from 'react'
 import './App.css'
+import { PREVIEW_BOOKINGS } from './designPreview.js'
 import { trackEvent } from './analytics.js'
 import useFavorites from './useFavorites.js'
 import BookingContactFields from './BookingContactFields.jsx'
@@ -122,14 +123,75 @@ function HeartIcon({ filled = false }) {
   return <svg viewBox="0 0 24 24" className="heart-icon" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" /></svg>
 }
 
+function UiIcon({ name }) {
+  const paths = {
+    calendar: <><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18"/></>,
+    home: <><path d="m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9"/></>,
+    list: <><path d="M9 6h12M9 12h12M9 18h12M3 6h1M3 12h1M3 18h1"/></>,
+    map: <><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2ZM9 3v16M15 5v16"/></>,
+    user: <><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></>,
+    route: <path d="m21 3-7 18-3-8-8-3Z"/>,
+    more: <path d="M4 6h16M4 12h16M4 18h16"/>,
+    search: <><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></>,
+    serve: <><path d="M3 18h18M5 16a7 7 0 0 1 14 0M12 7V5M10 5h4M2 21h20"/></>,
+  }
+  return <svg className="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>
+}
+
+function BookingDialog({ onClose, sending, children }) {
+  const dialog = useRef(null)
+  useEffect(() => {
+    const node = dialog.current
+    const previousFocus = document.activeElement
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    node.showModal()
+    return () => {
+      node.close()
+      document.body.style.overflow = previousOverflow
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus()
+    }
+  }, [])
+  function keepFocus(event) {
+    if (event.key !== 'Tab') return
+    const fields = [...dialog.current.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])')]
+      .filter((node) => node.getClientRects().length > 0 && node.tabIndex >= 0)
+    const first = fields[0]
+    const last = fields.at(-1)
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
+  }
+  return <dialog ref={dialog} className="booking-dialog" aria-labelledby="booking-title" onKeyDown={keepFocus}
+    onCancel={(event) => { event.preventDefault(); if (!sending) onClose() }}
+    onClick={(event) => { if (event.target === dialog.current && !sending) onClose() }}>
+    <div className="modal">{children}</div>
+  </dialog>
+}
+
+function BottomNav({ active, onNavigate, filtersOpen, filterCount }) {
+  return <nav className="bottom-nav" aria-label="Основна навігація">
+    {[
+      ['home', 'Головна', <UiIcon key="home" name="home" />],
+      ['map', 'Карта', <LocationIcon key="map" />],
+      ['favorites', 'Обране', <HeartIcon key="favorites" />],
+      ['bookings', 'Бронювання', <UiIcon key="bookings" name="calendar" />],
+      ['filters', 'Фільтри', <UiIcon key="filters" name="more" />],
+    ].map(([id, label, icon]) => <button key={id} type="button" className={active === id || (id === 'filters' && filtersOpen) ? 'active' : ''}
+      aria-current={active === id ? 'page' : undefined}
+      aria-haspopup={id === 'filters' ? 'dialog' : undefined} aria-expanded={id === 'filters' ? filtersOpen : undefined}
+      onClick={() => onNavigate(id)}>{icon}<span>{label}{id === 'filters' && filterCount > 0 ? ` · ${filterCount}` : ''}</span></button>)}
+  </nav>
+}
+
 function PlaceCard({ place, onBook, onDetails, favorites }) {
   const [failedPhoto, setFailedPhoto] = useState(null)
   const open = isOpenNow(place.hours)
-  const statusText = open === null ? '' : open ? 'Відкрито' : 'Зачинено'
+  const statusText = open === null ? '' : open ? 'Відкрито зараз' : 'Зачинено'
   const hasMenu = /^https?:\/\//i.test(place.menu_url || '')
+  const hasPhoto = Boolean(place.photo_url && failedPhoto !== place.photo_url)
   return (
-    <article className="card place-card">
-      {place.photo_url && failedPhoto !== place.photo_url && (
+    <article className={hasPhoto ? "card place-card has-photo" : "card place-card"}>
+      {hasPhoto && (
         <button type="button" className="place-photo-link" aria-label={`Детальніше про заклад: ${place.name}`} onClick={() => onDetails(place)}>
           <img className="photo" src={place.photo_url} alt="" loading="lazy" onError={() => setFailedPhoto(place.photo_url)} />
         </button>
@@ -168,9 +230,8 @@ function PlaceCard({ place, onBook, onDetails, favorites }) {
               Меню
             </button>
           )}
-          <button className="book" onClick={() => onBook(place)}>
-            Забронювати
-          </button>
+          <button className="book" onClick={() => onBook(place)}><UiIcon name="calendar" />Забронювати столик</button>
+          {coordinates(place) && <button type="button" className="route-button" aria-label={`Маршрут до ${place.name}`} onClick={() => openMenu(routeUrl(place))}><UiIcon name="route" /></button>}
         </div>
       </div>
     </article>
@@ -180,6 +241,7 @@ function PlaceCard({ place, onBook, onDetails, favorites }) {
 
 function AppContent() {
   const favorites = useFavorites()
+  const catalogSearch = useRef(null)
   const [onlyFavorites, setOnlyFavorites] = useState(false)
   const [places, setPlaces] = useState([])
   const [loading, setLoading] = useState(true)
@@ -226,7 +288,7 @@ function AppContent() {
       tg.expand()
       const dark = tg.colorScheme === 'dark'
       document.documentElement.dataset.theme = dark ? 'dark' : 'light'
-      const bg = dark ? '#1c1917' : '#f7f2ec'
+      const bg = dark ? '#181818' : '#ffffff'
       try {
         tg.setHeaderColor(bg)
         tg.setBackgroundColor(bg)
@@ -397,77 +459,74 @@ function AppContent() {
       setSending(false)
     }
   }
-  if (screen === 'my-bookings') return <Suspense fallback={<PageLoading onClose={() => setScreen('catalog')} />}><MyBookings onBack={() => setScreen('catalog')} /></Suspense>
+  function navigate(section) {
+    if (section === 'bookings') { setScreen('my-bookings'); return }
+    setScreen('catalog')
+    if (section === 'home') { setView('list'); setOnlyFavorites(false) }
+    if (section === 'map') setView('map')
+    if (section === 'favorites') { setView('list'); setOnlyFavorites(true) }
+    if (section === 'filters') setFiltersOpen(true)
+  }
+  const activeNav = screen === 'my-bookings' ? 'bookings' : view === 'map' ? 'map' : onlyFavorites ? 'favorites' : 'home'
+  const navigation = <BottomNav active={activeNav} onNavigate={navigate} filtersOpen={filtersOpen} filterCount={filterCount} />
+  if (screen === 'my-bookings') return <div className="guest-section"><Suspense fallback={<PageLoading onClose={() => setScreen('catalog')} />}><MyBookings onBack={() => setScreen('catalog')} previewBookings={import.meta.env.VITE_DESIGN_PREVIEW === 'true' ? PREVIEW_BOOKINGS : null} /></Suspense>{navigation}</div>
   if (screen === 'cabinet') return <Suspense fallback={<PageLoading onClose={() => setScreen('catalog')} />}><Cabinet onBack={() => setScreen('catalog')} onPlaceSaved={(updated) => setPlaces((old) => old.map((p) => p.id === updated.id ? { ...p, ...updated } : p))} /></Suspense>
   
   return (
-    <div className={view === 'map' ? 'app map-mode' : 'app'}>
+    <div className={view === 'map' ? 'app catalog-app map-mode' : 'app catalog-app'} onPointerDownCapture={(event) => {
+      const input = catalogSearch.current
+      if (input && document.activeElement === input && !input.contains(event.target)) input.blur()
+    }}>
+      <div className="brand-row"><span className="brand-mark"><CatalogIcon name="Ресторани" /></span><strong>Поїмо</strong></div>
          <div className="topbar">
-        <div className="catalog-title"><p className="city-label">Київ</p><h1>Де поїмо?</h1></div>
+        <div className="catalog-title"><p className="city-label"><LocationIcon />Київ</p><h1><span className="headline-word">{onlyFavorites ? 'Обране' : 'Де поїмо?'}</span> {!onlyFavorites && <span className="greeting" aria-hidden="true">👋</span>}</h1></div>
         {isAdmin && (
           <button className="cab-btn" onClick={() => setScreen('cabinet')}>
-            Кабінет
+            <UiIcon name="user" />Кабінет
           </button>
         )}
       </div>
 
-      <button className="my-bookings-link" onClick={() => setScreen("my-bookings")}>Мої бронювання <span aria-hidden="true">→</span></button>
-
-      <div className="collection-tabs" role="group" aria-label="Колекція закладів">
-        <button className={!onlyFavorites ? 'active' : ''} aria-pressed={!onlyFavorites} onClick={() => setOnlyFavorites(false)}>Усі заклади</button>
-        <button className={onlyFavorites ? 'active' : ''} aria-pressed={onlyFavorites} onClick={() => setOnlyFavorites(true)}><HeartIcon filled={onlyFavorites} />Обране{!favorites.loading && !favorites.error && favorites.enabled ? ` · ${places.filter((p) => favorites.ids.includes(String(p.id))).length}` : ''}</button>
-      </div>
       {favorites.loading && <p className="booking-note" role="status">Завантажуємо обране…</p>}
       {favorites.error && <div className="favorites-message" role="alert"><p>{favorites.error}</p>{favorites.enabled && <button className="menu-btn" disabled={favorites.busyIds.length > 0} onClick={favorites.retry}>Оновити обране</button>}</div>}
       {onlyFavorites && !favorites.enabled && <p role="status">Відкрийте застосунок через Telegram, щоб бачити своє обране.</p>}
       {onlyFavorites && favorites.enabled && !favorites.loading && !favorites.error && <p className="booking-note favorites-hint">Збережені заклади. Пошук і фільтри також застосовуються до обраного.</p>}
 
-      {view === 'map' && <div className="map-mode-title"><strong>{onlyFavorites ? 'Обране на карті' : 'Заклади на карті'}</strong><span>Знайдено: {visible.length}</span></div>}
-      <input
+      {view === 'map' && <div className="map-mode-title"><strong>{onlyFavorites ? 'Обране на карті' : 'Заклади на карті'}</strong></div>}
+      <form className="search-wrap" role="search" onSubmit={(event) => { event.preventDefault(); catalogSearch.current?.blur() }}><UiIcon name="search" /><input
+        ref={catalogSearch}
+        type="search"
+        enterKeyHint="search"
         className="search"
         aria-label="Пошук закладу за назвою"
         placeholder="Пошук за назвою"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-      />
+        onKeyDown={(event) => { if (event.key === 'Enter' && !event.nativeEvent.isComposing) { event.preventDefault(); event.currentTarget.blur() } }}
+      /></form>
 
-      <div className="catalog-filter-toolbar">
-        <button type="button" aria-pressed={filters.onlyOpen} className={filters.onlyOpen ? 'chip active' : 'chip'} onClick={() => setFilters((old) => ({ ...old, onlyOpen: !old.onlyOpen }))}><CatalogIcon name="clock" />Відкрито зараз</button>
-        <button type="button" className={filterCount ? 'chip active' : 'chip'} aria-haspopup="dialog" aria-expanded={filtersOpen} onClick={() => setFiltersOpen(true)}>
-          <svg className="catalog-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 7h16M4 17h16M8 4v6M16 14v6" /></svg>Фільтри{filterCount ? ` · ${filterCount}` : ''}
-        </button>
-      </div>
       {filterChips.length > 0 && <div className="selected-filters" aria-label="Обрані фільтри">{filterChips.map((chip) => <button type="button" key={chip.key} aria-label={`Прибрати фільтр: ${chip.label}`} onClick={chip.remove}>{chip.label}<span aria-hidden="true">×</span></button>)}</div>}
-      <label className="catalog-sort"><span>Сортування</span><select aria-label="Сортування закладів" value={me ? 'near' : 'default'} disabled={locating} onChange={(e) => { if ((e.target.value === 'near') !== Boolean(me)) toggleNearMe() }}><option value="default">За замовчуванням</option><option value="near">Найближчі</option></select>{locating && <span role="status">Шукаємо вас…</span>}</label>
-      {filtersOpen && <Suspense fallback={<OverlayLoading onClose={() => setFiltersOpen(false)} />}><FilterSheet value={filters} categories={CATEGORIES} renderCategoryIcon={(name) => <CatalogIcon name={name} />} districts={districtOptions} cuisines={cuisineOptions}
+      {filtersOpen && <Suspense fallback={<OverlayLoading onClose={() => setFiltersOpen(false)} />}><FilterSheet value={filters} sortValue={me ? 'near' : 'default'} sortingPending={locating} categories={CATEGORIES} renderCategoryIcon={(name) => <CatalogIcon name={name} />} districts={districtOptions} cuisines={cuisineOptions}
         unavailable={loading || loadError || (onlyFavorites && (favorites.loading || Boolean(favorites.error) || !favorites.enabled))}
         resultCount={(draft) => filterPlaces(places, draft, filterContext, isOpenNow).length}
-        onClose={() => setFiltersOpen(false)} onApply={(draft) => { setFilters(draft); setFiltersOpen(false); setPicked(null) }} /></Suspense>}
+        onClose={() => setFiltersOpen(false)} onApply={(draft, sort) => { setFilters(draft); setFiltersOpen(false); setPicked(null); if ((sort === 'near') !== Boolean(me)) void toggleNearMe() }} /></Suspense>}
 
       {!loading && !loadError && (
         <div className="results-bar">
-          <p role="status" aria-live="polite">Знайдено закладів: <strong>{visible.length}</strong></p>
+          <div className="results-summary">
+            <p role="status" aria-live="polite">Знайдено: <strong>{visible.length}</strong></p>
+            <button type="button" role="switch" aria-checked={filters.onlyOpen} className="open-now-switch"
+              onClick={() => setFilters((old) => ({ ...old, onlyOpen: !old.onlyOpen }))}>
+              <span>Відкрито зараз</span><span className="switch-track" aria-hidden="true"><span /></span>
+            </button>
+          </div>
           {hasFilters && <button type="button" className="reset-filters" onClick={resetFilters}>Скинути</button>}
         </div>
       )}
+      {locating && <p className="hint left" role="status">Шукаємо вас…</p>}
       {me && <p className="hint left">Спочатку найближчі до вас. Відстань — по прямій.</p>}
 
       {locError && <p className="hint">{locError}</p>}
-
-      <div className="tabs">
-        <button
-          className={view === 'list' ? 'tab active' : 'tab'}
-          onClick={() => setView('list')}
-        >
-          Список
-        </button>
-        <button
-          className={view === 'map' ? 'tab active' : 'tab'}
-          onClick={() => setView('map')}
-        >
-          Карта
-        </button>
-      </div>
 
       {loading && <p>Завантаження…</p>}
       {loadError && <p>Не вдалося завантажити заклади. Спробуйте пізніше.</p>}
@@ -494,12 +553,12 @@ function AppContent() {
         </InteractiveMap></Suspense>
       )}
 
+      {navigation}
       {detailPlace && <Suspense fallback={<OverlayLoading onClose={() => setDetailPlace(null)} />}><PlaceDetails key={detailPlace.id} place={detailPlace} open={isOpenNow(detailPlace.hours)} favorites={favorites} openLink={openMenu} renderHeart={(filled) => <HeartIcon filled={filled} />} onClose={() => setDetailPlace(null)} onBook={(place) => { setDetailPlace(null); openBooking(place) }} /></Suspense>}
       {selected && (
-        <div className="overlay" onClick={closeModal}>
-          <div className="modal" role="dialog" aria-modal="true" aria-label={selected.name} onClick={(e) => e.stopPropagation()}>
+        <BookingDialog onClose={closeModal} sending={sending}>
             <button type="button" className="modal-close" onClick={closeModal} aria-label="Закрити форму">✕</button>
-            <h2>{selected.name}</h2>
+            <h2 id="booking-title">{selected.name}</h2>
             {sent ? (
               <>
                 <p>{delivery === 'sent' ? 'Заявку збережено й передано закладу. Очікуйте підтвердження в Telegram.' : delivery === 'skipped' ? 'Заявку збережено. Перевірте її актуальний статус у «Моїх бронюваннях».' : ['queued', 'retrying', 'sending'].includes(delivery) ? 'Заявку збережено. Повідомлення закладу ще доставляється — повторювати заявку не потрібно. Очікуйте підтвердження в Telegram.' : 'Заявку збережено, але доставку повідомлення закладу не підтверджено. Не створюйте повторну заявку; зв’яжіться із закладом.'}</p>
@@ -540,8 +599,7 @@ function AppContent() {
                 </button>
               </form>
             )}
-          </div>
-        </div>
+        </BookingDialog>
       )}
     </div>
   )
