@@ -441,7 +441,7 @@ h1 { font-size: 24px; font-weight: 700; margin: 4px 0 14px; letter-spacing: -0.3
 .catalog-app .collection-tabs button.active { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
 .search-wrap { position: relative; }
 .search-wrap > .ui-icon { position: absolute; top: 50%; left: 13px; transform: translateY(-50%); width: 17px; height: 17px; color: var(--hint); pointer-events: none; }
-.catalog-app .search { min-height: 40px; padding: 9px 12px 9px 39px; font-size: 14px; border-radius: 14px; box-shadow: 0 1px 3px #00000009; }
+.catalog-app .search { min-height: 40px; padding: 9px 12px 9px 39px; font-size: 16px; border-radius: 14px; box-shadow: 0 1px 3px #00000009; }
 .catalog-app .catalog-filter-toolbar { margin: 8px 0; }
 .catalog-app .catalog-filter-toolbar .chip { min-height: 40px; padding: 7px; border-radius: 14px; font-size: 12px; box-shadow: 0 2px 4px #00000009; }
 .catalog-app .catalog-sort { margin: 5px 0; gap: 12px; font-size: 12px; }

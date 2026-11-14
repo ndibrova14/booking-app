@@ -34,3 +34,6 @@ body {
 h1, .card h3, .modal h2 {
   font-family: inherit;
 }
+/* Avoid horizontal layout panning; keep vertical scrolling and user zoom available. */
+html, body, #root { max-width: 100%; }
+html, body { overflow-x: clip; }
